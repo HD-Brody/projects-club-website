@@ -171,6 +171,17 @@ export default function App() {
         </div>
       </section>
 
+      {/* Escape Room Registration */}
+      <section id="escape-room" className="py-14 bg-slate-50 ring-1 ring-slate-200">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold">Escape Room — Team Registration</h2>
+          <p className="text-slate-600 mt-2">Each team should submit only one form. Must have 5 teammates (including the submitter).</p>
+          <div className="mt-6">
+            <RegistrationForm />
+          </div>
+        </div>
+      </section>
+
       {/* Join Us */}
       <section id="join" className="py-14">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
@@ -225,5 +236,125 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+// RegistrationForm component collects team registration data and POSTs to a spreadsheet/webhook.
+function RegistrationForm() {
+  // TODO: replace with your deployed Apps Script web app URL or other form endpoint
+  const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxxcWJTrSDwhjB18VOXlkFN5uRlxxlMHKO-iChSJe5SrTmn7EBmv8e1Vo_L_g2YmQK_Fw/exec";
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [program, setProgram] = useState("");
+  const [email, setEmail] = useState("");
+  // Enforce exactly 4 teammates (plus submitter = 5 total)
+  const [teammates, setTeammates] = useState<Array<{ name: string; email: string }>>([
+    { name: "", email: "" },
+    { name: "", email: "" },
+    { name: "", email: "" },
+    { name: "", email: "" }
+  ]);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  // No dynamic add/remove: teams must have exactly 5 members (submitter + 4 teammates)
+  const addTeammate = () => {};
+  const removeTeammate = (_i: number) => {};
+  const updateTeammate = (i: number, key: "name" | "email", value: string) => {
+    const copy = teammates.slice();
+    copy[i] = { ...copy[i], [key]: value };
+    setTeammates(copy);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    // require submitter fields
+    if (!firstName.trim() || !lastName.trim() || !program.trim() || !email.trim()) {
+      setMessage("Please fill required fields for the team submitter.");
+      return;
+    }
+    // require all 4 teammate name+email fields
+    for (let i = 0; i < teammates.length; i++) {
+      if (!teammates[i].name.trim() || !teammates[i].email.trim()) {
+        setMessage(`Please fill name and UofT email for teammate ${i + 1}. All 4 teammates are required.`);
+        return;
+      }
+    }
+    setSubmitting(true);
+    const payload = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      program: program.trim(),
+      email: email.trim(),
+      teammates: teammates.map((t) => ({ name: t.name.trim(), email: t.email.trim() }))
+    };
+
+    try {
+      const res = await fetch(SHEETS_ENDPOINT, {
+        method: "POST",
+        // use a simple content type to avoid CORS preflight (some Apps Script deployments
+        // don't respond to OPTIONS). Apps Script can still read the body via e.postData.contents.
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.success === true || res.status === 200)) {
+        setMessage("Registration submitted - thank you! Each team should submit only one form.");
+        // clear form
+        setFirstName("");
+        setLastName("");
+        setProgram("");
+        setEmail("");
+        setTeammates([
+          { name: "", email: "" },
+          { name: "", email: "" },
+          { name: "", email: "" },
+          { name: "", email: "" }
+        ]);
+      } else {
+        setMessage((data && data.error) ? `Failed: ${String(data.error)}` : "Failed to submit — try again or contact projectsclub@utoronto.ca");
+      }
+    } catch (err) {
+      setMessage("Network error — try again later.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+        <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input required value={program} onChange={(e) => setProgram(e.target.value)} placeholder="Program (e.g., CS, Rotman Commerce)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="UofT email (you@utoronto.ca)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+      </div>
+
+      <div>
+        <h3 className="font-medium">Teammates (required)</h3>
+        <p className="text-xs text-slate-500 mb-2">This event requires exactly 5-person teams: the submitter plus 4 teammates. Please provide the full name and UofT email for each teammate.</p>
+        <div className="space-y-3">
+          {teammates.map((t, i) => (
+            <div key={i} className="grid sm:grid-cols-2 gap-3 items-center">
+              <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1} name`} className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+              <div className="flex gap-2">
+                <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`Teammate ${i + 1} UofT email`} className="flex-1 px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={submitting} className="px-6 py-3 rounded-xl bg-indigo-600 text-white">
+          {submitting ? "Submitting..." : "Submit registration"}
+        </button>
+        {message && <p className="text-sm text-slate-600">{message}</p>}
+      </div>
+    </form>
   );
 }
