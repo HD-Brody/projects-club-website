@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import EscapeRoomPage from "./EscapeRoom";
 
 // ⬇️ Replace these with your real images (GitHub, Google Drive public links, or /public folder paths)
