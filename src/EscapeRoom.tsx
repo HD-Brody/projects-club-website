@@ -135,6 +135,8 @@ export default function EscapeRoomPage() {
           )}
 
           <div className="flex items-center gap-3">
+            <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="px-4 py-3 rounded-xl bg-amber-500 text-white hover:opacity-90">Get tickets</a>
+
             <button type="submit" disabled={submitting} className="px-6 py-3 rounded-xl bg-indigo-600 text-white">
               {submitting ? "Submitting..." : "Submit registration"}
             </button>
