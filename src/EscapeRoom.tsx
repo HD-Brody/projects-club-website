@@ -4,6 +4,7 @@ export default function EscapeRoomPage() {
   // Replace with deployed Apps Script web app URL or other form endpoint
   const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx9NJt_al_Ki73Rr9Kuq0Y0jGkXkfXY7GdqA2OthW_9m7nLJXrzZYGxZqTyr3w_H218Cg/exec";
 
+  const [registrationType, setRegistrationType] = useState<"team" | "individual">("team");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [program, setProgram] = useState("");
@@ -35,30 +36,40 @@ export default function EscapeRoomPage() {
       setMessage("Please fill required fields for the submitter (including year).");
       return;
     }
-    // Validate teammates only for the number of teammates expected (teamSize - 1)
-    const neededTeammates = Math.max(0, Math.min(4, teamSize - 1));
-    if (neededTeammates < 1) {
-      setMessage("Team size must be between 2 and 5 people.");
-      return;
-    }
-    for (let i = 0; i < neededTeammates; i++) {
-      const tm = teammates[i];
-      if (!tm.name.trim() || !tm.email.trim() || !tm.major?.trim() || !tm.year?.trim()) {
-        setMessage(`Please fill name, UofT email, major, and year for teammate ${i + 1}.`);
+    
+    // For individual registration, skip teammate validation
+    if (registrationType === "team") {
+      // Validate teammates only for the number of teammates expected (teamSize - 1)
+      const neededTeammates = Math.max(0, Math.min(4, teamSize - 1));
+      if (neededTeammates < 1) {
+        setMessage("Team size must be between 2 and 5 people.");
         return;
+      }
+      for (let i = 0; i < neededTeammates; i++) {
+        const tm = teammates[i];
+        if (!tm.name.trim() || !tm.email.trim() || !tm.major?.trim() || !tm.year?.trim()) {
+          setMessage(`Please fill name, UofT email, major, and year for teammate ${i + 1}.`);
+          return;
+        }
       }
     }
 
     setSubmitting(true);
     const payload: any = {
-      teamSize,
+      registrationType,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       program: program.trim(),
       submitterYear: submitterYear.trim(),
       email: email.trim(),
-      teammates: teammates.slice(0, neededTeammates).map((t) => ({ name: t.name.trim(), email: t.email.trim(), major: (t.major||"").trim(), year: (t.year||"").trim() }))
     };
+    
+    // Only include team-specific fields for team registration
+    if (registrationType === "team") {
+      const neededTeammates = Math.max(0, Math.min(4, teamSize - 1));
+      payload.teamSize = teamSize;
+      payload.teammates = teammates.slice(0, neededTeammates).map((t) => ({ name: t.name.trim(), email: t.email.trim(), major: (t.major||"").trim(), year: (t.year||"").trim() }));
+    }
 
     try {
       const res = await fetch(SHEETS_ENDPOINT, {
@@ -116,7 +127,33 @@ export default function EscapeRoomPage() {
           <div className="mx-auto max-w-xl bg-gradient-to-b from-white/5 to-white/3 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl">
             <button onClick={() => { window.location.hash = ''; }} className="mb-4 text-sm text-slate-300 hover:underline">← Back to home</button>
             <h2 className="text-2xl font-bold mb-1">Register for Escape Room</h2>
-            <p className="text-sm text-slate-400 mb-6">Register in a group of 2–5 people. Each group should submit only one form.</p>
+            <p className="text-sm text-slate-400 mb-6">{registrationType === "team" ? "Register in a group of 2–5 people. Each group should submit only one form." : "Register as an individual participant."}</p>
+
+            {/* Registration Type Toggle */}
+            <div className="mb-6 p-1 rounded-lg bg-black/40 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRegistrationType("team")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  registrationType === "team"
+                    ? "bg-gradient-to-r from-pink-500 to-amber-400 text-black shadow-lg"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Team (2-5 people)
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegistrationType("individual")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  registrationType === "individual"
+                    ? "bg-gradient-to-r from-pink-500 to-amber-400 text-black shadow-lg"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Individual
+              </button>
+            </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -130,32 +167,36 @@ export default function EscapeRoomPage() {
                 <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="UofT email" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 items-center">
-                <label className="flex items-center gap-2">
-                  <span className="text-sm">Team size</span>
-                </label>
-                <select value={teamSize} onChange={(e) => setTeamSize(Number(e.target.value))} className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none">
-                  <option value={2}>2 people</option>
-                  <option value={3}>3 people</option>
-                  <option value={4}>4 people</option>
-                  <option value={5}>5 people</option>
-                </select>
-              </div>
+              {registrationType === "team" && (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 items-center">
+                    <label className="flex items-center gap-2">
+                      <span className="text-sm">Team size</span>
+                    </label>
+                    <select value={teamSize} onChange={(e) => setTeamSize(Number(e.target.value))} className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none">
+                      <option value={2}>2 people</option>
+                      <option value={3}>3 people</option>
+                      <option value={4}>4 people</option>
+                      <option value={5}>5 people</option>
+                    </select>
+                  </div>
 
-              <div>
-                <h3 className="font-medium">Teammates ({visibleTeammateCount} required)</h3>
-                <p className="text-xs text-slate-400 mb-2">Provide name, email, major, and year for each teammate.</p>
-                <div className="space-y-3">
-                  {teammates.slice(0, visibleTeammateCount).map((t, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                      <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1} name`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
-                      <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`UofT email`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
-                      <input required value={t.major} onChange={(e) => updateTeammate(i, "major", e.target.value)} placeholder="Major" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
-                      <input required value={t.year} onChange={(e) => updateTeammate(i, "year", e.target.value)} placeholder="Year" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                  <div>
+                    <h3 className="font-medium">Teammates ({visibleTeammateCount} required)</h3>
+                    <p className="text-xs text-slate-400 mb-2">Provide name, email, major, and year for each teammate.</p>
+                    <div className="space-y-3">
+                      {teammates.slice(0, visibleTeammateCount).map((t, i) => (
+                        <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                          <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1} name`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                          <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`UofT email`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                          <input required value={t.major} onChange={(e) => updateTeammate(i, "major", e.target.value)} placeholder="Major" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                          <input required value={t.year} onChange={(e) => updateTeammate(i, "year", e.target.value)} placeholder="Year" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
 
               <div className="flex items-center gap-3 pt-2">
                 <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="px-4 py-3 rounded-lg bg-amber-500 text-black font-semibold hover:opacity-90">Get tickets</a>
