@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import EscapeRoomPage from "./EscapeRoom";
 
 // ⬇️ Replace these with your real images (GitHub, Google Drive public links, or /public folder paths)
 const GALLERY = [
@@ -13,15 +14,23 @@ const GALLERY = [
 export default function App() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [route, setRoute] = useState(window.location.hash || "");
   
   useEffect(() => {
     document.title = "Projects Club — University of Toronto";
+    const onHash = () => setRoute(window.location.hash || "");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   const openLightbox = (i: number) => {
     setActive(i);
     setOpen(true);
   };
+
+  if (route === '#/escape') {
+    return <EscapeRoomPage />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800">
@@ -174,9 +183,10 @@ export default function App() {
       {/* Escape Room Registration */}
       <section id="escape-room" className="py-14 bg-slate-50 ring-1 ring-slate-200">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold">Escape Room — Team Registration</h2>
+          <h2 className="text-2xl font-bold">Escape Room — Registration</h2>
+          <p className="text-slate-600 mt-2">Sign up for the Escape Room event.</p>
           <div className="mt-6">
-            <RegistrationForm />
+            <a href="#/escape" className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:opacity-90">Open registration page</a>
           </div>
         </div>
       </section>
@@ -238,147 +248,4 @@ export default function App() {
   );
 }
 
-// RegistrationForm component collects team registration data and POSTs to a spreadsheet/webhook.
-function RegistrationForm() {
-  // Replace with deployed Apps Script web app URL or other form endpoint
-  const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbz8OCbGLQCmKqq4TCGGrp0jmsfhxXiYv05Zemw1FQIgE5S60PCqsJCzAar0Nv_wXtuMEA/exec";
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [program, setProgram] = useState("");
-  const [submitterYear, setSubmitterYear] = useState("");
-  const [email, setEmail] = useState("");
-  const [signupType, setSignupType] = useState<"individual" | "team">("team");
-  // Enforce exactly 4 teammates (plus submitter = 5 total)
-  const [teammates, setTeammates] = useState<Array<{ name: string; email: string; major?: string; year?: string }>>([
-    { name: "", email: "", major: "", year: "" },
-    { name: "", email: "", major: "", year: "" },
-    { name: "", email: "", major: "", year: "" },
-    { name: "", email: "", major: "", year: "" }
-  ]);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  // No dynamic add/remove: teams must have exactly 5 members (submitter + 4 teammates)
-  const addTeammate = () => {};
-  const removeTeammate = (_i: number) => {};
-  const updateTeammate = (i: number, key: "name" | "email" | "major" | "year", value: string) => {
-    const copy = teammates.slice();
-    copy[i] = { ...copy[i], [key]: value };
-    setTeammates(copy);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
-    // require submitter fields
-    if (!firstName.trim() || !lastName.trim() || !program.trim() || !email.trim() || !submitterYear.trim()) {
-      setMessage("Please fill required fields for the submitter (including year).");
-      return;
-    }
-    // If signing up as a team, require teammate details (exactly 4 teammates required)
-    if (signupType === "team") {
-      for (let i = 0; i < teammates.length; i++) {
-        const tm = teammates[i];
-        if (!tm.name.trim() || !tm.email.trim() || !tm.major?.trim() || !tm.year?.trim()) {
-          setMessage(`Please fill name, UofT email, major, and year for teammate ${i + 1}. All 4 teammates are required.`);
-          return;
-        }
-      }
-    }
-    setSubmitting(true);
-    const payload: any = {
-      signupType,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      program: program.trim(),
-      submitterYear: submitterYear.trim(),
-      email: email.trim()
-    };
-    if (signupType === "team") {
-      payload.teammates = teammates.map((t) => ({ name: t.name.trim(), email: t.email.trim(), major: (t.major||"").trim(), year: (t.year||"").trim() }));
-    } else {
-      payload.teammates = [];
-    }
-
-    try {
-      const res = await fetch(SHEETS_ENDPOINT, {
-        method: "POST",
-        // use a simple content type to avoid CORS preflight (some Apps Script deployments
-        // don't respond to OPTIONS). Apps Script can still read the body via e.postData.contents.
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && (data.success === true || res.status === 200)) {
-        setMessage("Registration submitted - thank you! Each team should submit only one form.");
-        // clear form
-        setFirstName("");
-        setLastName("");
-        setProgram("");
-        setSubmitterYear("");
-        setEmail("");
-        setTeammates([
-          { name: "", email: "", major: "", year: "" },
-          { name: "", email: "", major: "", year: "" },
-          { name: "", email: "", major: "", year: "" },
-          { name: "", email: "", major: "", year: "" }
-        ]);
-      } else {
-        setMessage((data && data.error) ? `Failed: ${String(data.error)}` : "Failed to submit — try again or contact projectsclub@utoronto.ca");
-      }
-    } catch (err) {
-      setMessage("Network error — try again later.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-      <div className="grid gap-3 sm:grid-cols-2 items-center">
-        <label className="flex items-center gap-2">
-          <input type="radio" name="signupType" value="individual" checked={signupType === "individual"} onChange={() => setSignupType("individual")} />
-          <span className="text-sm">Signing up individually</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="radio" name="signupType" value="team" checked={signupType === "team"} onChange={() => setSignupType("team")} />
-          <span className="text-sm">Signing up as a team</span>
-        </label>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-3">
-        <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-        <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-      </div>
-      <div className="grid sm:grid-cols-3 gap-3">
-        <input required value={program} onChange={(e) => setProgram(e.target.value)} placeholder="Program (e.g., CS, Rotman Commerce)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-        <input required value={submitterYear} onChange={(e) => setSubmitterYear(e.target.value)} placeholder="Year (e.g., 1, 2, 3)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="UofT email (you@utoronto.ca)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-      </div>
-
-      {signupType === "team" && (
-        <div>
-          <h3 className="font-medium">Teammates (required)</h3>
-          <p className="text-xs text-slate-500 mb-2">This event requires exactly 5-person teams: the submitter plus 4 teammates. Please provide the full name, UofT email, major, and year for each teammate.</p>
-          <div className="space-y-3">
-            {teammates.map((t, i) => (
-              <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1} name`} className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`UofT email`} className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                <input required value={t.major} onChange={(e) => updateTeammate(i, "major", e.target.value)} placeholder="Major" className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                <input required value={t.year} onChange={(e) => updateTeammate(i, "year", e.target.value)} placeholder="Year" className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center gap-3">
-        <button type="submit" disabled={submitting} className="px-6 py-3 rounded-xl bg-indigo-600 text-white">
-          {submitting ? "Submitting..." : "Submit registration"}
-        </button>
-        {message && <p className="text-sm text-slate-600">{message}</p>}
-      </div>
-    </form>
-  );
-}
