@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export default function EscapeRoomPage() {
   // Replace with deployed Apps Script web app URL or other form endpoint
-  const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx_CKodPhSHBIBZHYBfillBu2F45a3t7XD0sV_HGSggxvnUeI5R3wY5d_j9v9VRUKWU5A/exec";
+  const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx9NJt_al_Ki73Rr9Kuq0Y0jGkXkfXY7GdqA2OthW_9m7nLJXrzZYGxZqTyr3w_H218Cg/exec";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -65,7 +65,7 @@ export default function EscapeRoomPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && (data.success === true || res.status === 200)) {
-        setMessage("Registration submitted - thank you! Each team should submit only one form.");
+        setMessage("Registration submitted!");
         setFirstName("");
         setLastName("");
         setProgram("");
@@ -88,61 +88,82 @@ export default function EscapeRoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 p-8">
-      <div className="mx-auto max-w-3xl bg-white p-8 rounded-2xl shadow ring-1 ring-slate-200">
-        <button onClick={() => { window.location.hash = ''; }} className="mb-4 text-sm underline">← Back to home</button>
-        <h1 className="text-2xl font-bold mb-2">Escape Room — Registration</h1>
-        <p className="text-slate-600 mb-4">Sign up individually or as a team. Teams must be exactly 5 people (submitter + 4 teammates). Each team should submit only once.</p>
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3">
-            <input required value={program} onChange={(e) => setProgram(e.target.value)} placeholder="Program (e.g., CS, Rotman Commerce)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-            <input required value={submitterYear} onChange={(e) => setSubmitterYear(e.target.value)} placeholder="Year (e.g., 1, 2, 3)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="UofT email (you@utoronto.ca)" className="px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none" />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 items-center">
-            <label className="flex items-center gap-2">
-              <input type="radio" name="signupType" value="individual" checked={signupType === "individual"} onChange={() => setSignupType("individual")} />
-              <span className="text-sm">Signing up individually</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="signupType" value="team" checked={signupType === "team"} onChange={() => setSignupType("team")} />
-              <span className="text-sm">Signing up as a team</span>
-            </label>
-          </div>
-
-          {signupType === "team" && (
-            <div>
-              <h3 className="font-medium">Teammates (required)</h3>
-              <p className="text-xs text-slate-500 mb-2">Provide name, UofT email, major, and year for each teammate.</p>
-              <div className="space-y-3">
-                {teammates.map((t, i) => (
-                  <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                    <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1} name`} className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                    <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`UofT email`} className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                    <input required value={t.major} onChange={(e) => updateTeammate(i, "major", e.target.value)} placeholder="Major" className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                    <input required value={t.year} onChange={(e) => updateTeammate(i, "year", e.target.value)} placeholder="Year" className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white outline-none min-w-0" />
-                  </div>
-                ))}
-              </div>
+    // center the page vertically so toggling fields doesn't move the hero out of center
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="mx-auto max-w-7xl px-6 py-12 lg:py-20 lg:px-8 grid lg:grid-cols-2 gap-12 items-center w-full">
+        {/* Left: Poster-inspired hero */}
+        <div className="relative flex items-center justify-center">
+          <div className="w-full text-center">
+            <div className="mx-auto mb-6 w-36 h-36 rounded-full bg-white grid place-items-center shadow-2xl" style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.6)' }}>
+              <div className="text-4xl">🔐</div>
             </div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="px-4 py-3 rounded-xl bg-amber-500 text-white hover:opacity-90">Get tickets</a>
-
-            <button type="submit" disabled={submitting} className="px-6 py-3 rounded-xl bg-indigo-600 text-white">
-              {submitting ? "Submitting..." : "Submit registration"}
-            </button>
-            {message && <p className="text-sm text-slate-600">{message}</p>}
+            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight">The<br/>Escape Room</h1>
+            <p className="mt-4 text-xl text-amber-300">Case Challenge + Panel Talk</p>
+            <p className="mt-6 text-slate-300 max-w-lg mx-auto">Presented by <span className="font-semibold text-amber-400">UTPC</span> — bring your problem solving A-game. Register as a team (5 people) or individually.</p>
           </div>
-        </form>
+
+          {/* decorative dotted circles */}
+          <div className="pointer-events-none absolute -left-20 top-6 w-48 h-48 rounded-full bg-gradient-to-tr from-violet-600 to-transparent opacity-20 blur-sm" />
+          <div className="pointer-events-none absolute -right-28 bottom-8 w-56 h-56 rounded-full bg-gradient-to-tr from-green-500 to-transparent opacity-20 blur-sm" />
+        </div>
+
+        {/* Right: Form card */}
+        <div>
+          <div className="mx-auto max-w-xl bg-gradient-to-b from-white/5 to-white/3 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl">
+            <button onClick={() => { window.location.hash = ''; }} className="mb-4 text-sm text-slate-300 hover:underline">← Back to home</button>
+            <h2 className="text-2xl font-bold mb-1">Register for Escape Room</h2>
+            <p className="text-sm text-slate-400 mb-6">Sign up individually or as a team. Teams must be exactly 5 people (submitter + 4 teammates). Each team should submit only one form.</p>
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <input required value={program} onChange={(e) => setProgram(e.target.value)} placeholder="Program (e.g., CS)" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                <input required value={submitterYear} onChange={(e) => setSubmitterYear(e.target.value)} placeholder="Year (e.g., 1)" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="UofT email" className="px-4 py-3 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 items-center">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="signupType" value="individual" checked={signupType === "individual"} onChange={() => setSignupType("individual")} />
+                  <span className="text-sm">Individual</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="signupType" value="team" checked={signupType === "team"} onChange={() => setSignupType("team")} />
+                  <span className="text-sm">Team (5 people)</span>
+                </label>
+              </div>
+
+              {signupType === "team" && (
+                <div>
+                  <h3 className="font-medium">Teammates (4 required)</h3>
+                  <p className="text-xs text-slate-400 mb-2">Provide name, email, major, and year for each teammate.</p>
+                  <div className="space-y-3">
+                    {teammates.map((t, i) => (
+                      <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                        <input required value={t.name} onChange={(e) => updateTeammate(i, "name", e.target.value)} placeholder={`Teammate ${i + 1}`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                        <input required value={t.email} onChange={(e) => updateTeammate(i, "email", e.target.value)} placeholder={`UofT email`} className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                        <input required value={t.major} onChange={(e) => updateTeammate(i, "major", e.target.value)} placeholder="Major" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                        <input required value={t.year} onChange={(e) => updateTeammate(i, "year", e.target.value)} placeholder="Year" className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 placeholder:text-slate-400 outline-none" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-2">
+                <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="px-4 py-3 rounded-lg bg-amber-500 text-black font-semibold hover:opacity-90">Get tickets</a>
+                <button type="submit" disabled={submitting} className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-amber-400 text-black font-bold shadow-lg hover:scale-105 transform transition">{submitting ? "Submitting..." : "Submit registration"}</button>
+                {message && <p className="text-sm text-slate-300">{message}</p>}
+              </div>
+
+              <p className="mt-3 text-xs text-amber-300">Your spot will only be confirmed after payment.</p>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
