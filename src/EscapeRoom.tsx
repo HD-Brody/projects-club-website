@@ -198,10 +198,19 @@ export default function EscapeRoomPage() {
                 </>
               )}
 
-              <div className="flex items-center gap-3 pt-2">
-                <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="px-4 py-3 rounded-lg bg-amber-500 text-black font-semibold hover:opacity-90">Get tickets</a>
+              <div className="flex flex-col gap-3 pt-2">
                 <button type="submit" disabled={submitting} className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-amber-400 text-black font-bold shadow-lg hover:scale-105 transform transition">{submitting ? "Submitting..." : "Submit registration"}</button>
-                {message && <p className="text-sm text-slate-300">{message}</p>}
+                {message && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-green-400 font-medium">{message}</p>
+                    {message === "Registration submitted!" && (
+                      <a href="https://www.eventbrite.com/e/utpc-escape-case-challenge-panel-talk-tickets-1860977276129?aff=oddtdtcreator" target="_blank" rel="noopener noreferrer" className="inline-block w-full px-6 py-3 rounded-lg bg-amber-500 text-black font-bold text-center hover:opacity-90 animate-pulse">
+                        🎫 Buy Your Tickets Now
+                      </a>
+                    )}
+                    {message !== "Registration submitted!" && <p className="text-xs text-slate-400">{message}</p>}
+                  </div>
+                )}
               </div>
 
               <p className="mt-3 text-xs text-amber-300">Your spot will only be confirmed after payment.</p>
