@@ -1,5 +1,5 @@
 {
-  "name": "projects-club",
+  "name": "projects-club-frontend",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -8,16 +8,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.41",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "vite": "^5.4.19",
     "tailwindcss": "^3.4.10",
-    "vite": "^5.4.19"
+    "postcss": "^8.4.41",
+    "autoprefixer": "^10.4.20"
   },
   "devDependencies": {
-    "@types/react": "^19.2.2",
+    "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.8"
   }
 }
