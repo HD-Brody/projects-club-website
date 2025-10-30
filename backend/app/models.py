@@ -8,6 +8,11 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
+    profile = db.relationship('Profile', back_populates='user', uselist=False, cascade='all, delete-orphan')
+    projects = db.relationship('Project', back_populates='owner', cascade='all, delete')
+    applications = db.relationship('Application', back_populates='applicant', cascade='all, delete')
+
 class Profile(db.Model):
     __tablename__ = 'profiles'
     id = db.Column(db.Integer, primary_key=True)
@@ -16,17 +21,29 @@ class Profile(db.Model):
     program = db.Column(db.String(128))
     year = db.Column(db.String(16))
 
+    # Relationship back
+    user = db.relationship('User', back_populates='profile')
+
 class Project(db.Model):
     __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
+    owner = db.relationship('User', back_populates='projects')
+    applications = db.relationship('Application', back_populates='project', cascade='all, delete')
+
 class Application(db.Model):
     __tablename__ = 'applications'
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     role = db.Column(db.String(64))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    project = db.relationship('Project', back_populates='applications')
+    applicant = db.relationship('User', back_populates='applications')
