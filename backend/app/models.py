@@ -20,6 +20,8 @@ class Profile(db.Model):
     full_name = db.Column(db.String(255))
     program = db.Column(db.String(128))
     year = db.Column(db.String(16))
+    bio = db.Column(db.Text)               # new
+    skills = db.Column(db.Text)            # new, could store comma-separated list or JSON
 
     # Relationship back
     user = db.relationship('User', back_populates='profile')

@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 
@@ -11,6 +12,7 @@ jwt = JWTManager()
 def create_app(config_object=None):
     load_dotenv()  # loads .env in dev
     app = Flask(__name__)
+    migrate = Migrate(app, db)
     if config_object:
         app.config.from_object(config_object)
     else:
