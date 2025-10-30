@@ -13,8 +13,8 @@ with app.app_context():
     bob = User(email='bob@example.com', password_hash=generate_password_hash('password'))
 
     # Profiles
-    alice.profile = Profile(full_name='Alice Chen', program='CS', year='2')
-    bob.profile = Profile(full_name='Bob Li', program='Math', year='3')
+    alice.profile = Profile(full_name='Alice Chen', program='CS', year='2', bio='Computer Science student.', skills='Python,JavaScript')
+    bob.profile = Profile(full_name='Bob Li', program='Math', year='3', bio='Mathematics enthusiast.', skills='Calculus,Linear Algebra')
 
     # Projects
     proj1 = Project(owner=alice, title='UofT Projects Site', description='Building the official club website.')
