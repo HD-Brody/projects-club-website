@@ -25,12 +25,14 @@ def create_app(config_object=None):
     migrate = Migrate(app, db)
     jwt.init_app(app)
 
-    # Enable CORS for React frontend
-    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+    # Enable CORS for React frontend (Vite dev server runs on 5173)
+    CORS(app, origins=["http://localhost:3000", "http://localhost:5173"], supports_credentials=True)
 
     # Blueprints
     from app.routes.auth_routes import auth_bp
+    from app.routes.profile_routes import profile_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(profile_bp, url_prefix='/api/profile')
 
     # Health check route
     @app.route("/health")

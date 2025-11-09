@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { authApi, profileApi, authUtils } from "../utils/api";
 
 export default function LoginSignupPage() {
   const [profileData, setProfileData] = useState({
@@ -11,64 +12,147 @@ export default function LoginSignupPage() {
   const [resetSent, setResetSent] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const token = authUtils.getToken();
+    if (token) {
+      setIsLoggedIn(true);
+      // Optionally load user profile here
+    }
+  }, []);
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn) {
       alert("Please sign in to save your profile!");
       return;
     }
-    // Here you would typically send the data to your backend
-    console.log("Profile data:", profileData);
-    alert("Profile saved successfully!");
+
+    setLoading(true);
+    setError(null);
+
+    const response = await profileApi.updateProfile(
+      profileData.description,
+      profileData.skills
+    );
+
+    setLoading(false);
+
+    if (response.error) {
+      setError(response.error);
+      alert(`Error: ${response.error}`);
+    } else {
+      alert("Profile saved successfully!");
+    }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get('email') as string;
-    
-    // Simulate successful login
-    setIsLoggedIn(true);
-    setUserEmail(email);
-    alert(`Successfully logged in as ${email}`);
+    const password = formData.get('password') as string;
+
+    const response = await authApi.login(email, password);
+
+    setLoading(false);
+
+    if (response.error) {
+      setError(response.error);
+      alert(`Login failed: ${response.error}`);
+    } else if (response.data) {
+      // Store token and update UI
+      authUtils.setToken(response.data.access_token);
+      setIsLoggedIn(true);
+      setUserEmail(email);
+      alert(`Successfully logged in as ${email}`);
+    }
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
     const email = formData.get('signup-email') as string;
-    
-    // Simulate successful signup and auto-login
-    setIsLoggedIn(true);
-    setUserEmail(email);
-    alert(`Account created successfully! Logged in as ${email}`);
+    const password = formData.get('signup-password') as string;
+    const confirmPassword = formData.get('confirm-password') as string;
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setLoading(false);
+      setError("Passwords do not match");
+      alert("Passwords do not match");
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      setLoading(false);
+      setError("Password must be at least 8 characters");
+      alert("Password must be at least 8 characters");
+      return;
+    }
+
+    const response = await authApi.signup(email, password, name);
+
+    setLoading(false);
+
+    if (response.error) {
+      setError(response.error);
+      alert(`Signup failed: ${response.error}`);
+    } else {
+      // Auto-login after signup
+      const loginResponse = await authApi.login(email, password);
+      if (loginResponse.data) {
+        authUtils.setToken(loginResponse.data.access_token);
+        setIsLoggedIn(true);
+        setUserEmail(email);
+        alert(`Account created successfully! Logged in as ${email}`);
+      } else {
+        alert("Account created! Please log in.");
+      }
+    }
   };
 
   const handleLogout = () => {
+    authUtils.removeToken();
     setIsLoggedIn(false);
     setUserEmail("");
     setProfileData({ description: "", skills: "" });
     alert("Successfully logged out!");
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail) {
       alert("Please enter your email address");
       return;
     }
     
-    // Simulate sending reset email
-    console.log("Sending reset email to:", resetEmail);
-    setResetSent(true);
-    
-    // Reset after 5 seconds
-    setTimeout(() => {
-      setResetSent(false);
-      setShowResetPassword(false);
-      setResetEmail("");
-    }, 5000);
+    setLoading(true);
+    const response = await authApi.requestPasswordReset(resetEmail);
+    setLoading(false);
+
+    if (response.error) {
+      alert(`Error: ${response.error}`);
+    } else {
+      setResetSent(true);
+      
+      // Reset after 5 seconds
+      setTimeout(() => {
+        setResetSent(false);
+        setShowResetPassword(false);
+        setResetEmail("");
+      }, 5000);
+    }
   };
 
   return (
@@ -219,9 +303,10 @@ export default function LoginSignupPage() {
                 
                 <button 
                   type="submit" 
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90 font-medium"
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign In
+                  {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
             </div>
@@ -272,24 +357,12 @@ export default function LoginSignupPage() {
                   />
                 </div>
                 
-                {/* Terms Agreement */}
-                <div className="flex items-start gap-3 text-sm">
-                  <input 
-                    type="checkbox" 
-                    id="terms"
-                    className="mt-1 rounded ring-1 ring-slate-300"
-                    required
-                  />
-                  <label htmlFor="terms" className="text-slate-600">
-                    I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
-                  </label>
-                </div>
-                
                 <button 
                   type="submit" 
-                  className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium"
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Account
+                  {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
             </div>
@@ -344,9 +417,10 @@ export default function LoginSignupPage() {
                 </div>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 font-medium"
+                  disabled={loading}
+                  className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Profile
+                  {loading ? 'Saving...' : 'Save Profile'}
                 </button>
               </form>
             ) : (
