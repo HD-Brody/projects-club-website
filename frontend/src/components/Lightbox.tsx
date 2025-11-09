@@ -8,12 +8,13 @@ interface LightboxProps {
   onNext: () => void;
 }
 
-export default function Lightbox({ images, activeIndex, onClose, onPrev, onNext }: LightboxProps) {
+function Lightbox({ images, activeIndex, onClose, onPrev, onNext }: LightboxProps) {
   return (
     <div 
       role="dialog" 
       aria-modal 
       className="fixed inset-0 z-[60] bg-black/70 grid place-items-center p-4" 
+      style={{ contain: "layout paint" }}
       onClick={onClose}
     >
       <div className="relative max-w-5xl w-full" onClick={e => e.stopPropagation()}>
@@ -21,6 +22,8 @@ export default function Lightbox({ images, activeIndex, onClose, onPrev, onNext 
           src={images[activeIndex].src} 
           alt={images[activeIndex].alt} 
           className="w-full h-auto rounded-2xl shadow-2xl" 
+          loading="eager" 
+          decoding="async"
         />
         <button 
           onClick={onClose} 
@@ -48,3 +51,5 @@ export default function Lightbox({ images, activeIndex, onClose, onPrev, onNext 
     </div>
   );
 }
+
+export default React.memo(Lightbox);

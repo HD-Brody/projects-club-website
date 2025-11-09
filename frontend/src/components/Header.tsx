@@ -4,12 +4,12 @@ interface HeaderProps {
   onNavigate?: (route: string) => void;
 }
 
-export default function Header({ onNavigate }: HeaderProps) {
+function Header({ onNavigate }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border-b border-slate-200">
+    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border-b border-slate-200 will-change-transform">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-slate-900 text-white grid place-items-center font-bold">PC</div>
+          <div className="h-9 w-9 rounded-xl bg-slate-900 text-white grid place-items-center font-bold select-none" aria-label="Projects Club logo">PC</div>
           <div className="leading-tight">
             <p className="font-semibold">UofT Projects Club</p>
             <p className="text-xs text-slate-500">Bridge business × tech</p>
@@ -39,3 +39,5 @@ export default function Header({ onNavigate }: HeaderProps) {
     </header>
   );
 }
+
+export default React.memo(Header);

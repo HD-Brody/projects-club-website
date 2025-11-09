@@ -50,7 +50,14 @@ export default function HomePage() {
             <div className="mt-6 flex items-center gap-6 text-sm text-slate-500">
               <div className="flex -space-x-2">
                 {GALLERY.slice(0,4).map((g,i) => (
-                  <img key={i} src={g.src} alt="" className="h-8 w-8 rounded-full ring-2 ring-white object-cover" />
+                  <img
+                    key={i}
+                    src={g.src}
+                    alt=""
+                    className="h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ))}
               </div>
               <span>150+ members · 30+ projects shipped</span>
@@ -58,7 +65,14 @@ export default function HomePage() {
           </div>
           <div className="relative">
             <div className="aspect-video rounded-2xl shadow-xl bg-white ring-1 ring-slate-200 overflow-hidden">
-              <img src={GALLERY[0].src} alt="Club highlight" className="w-full h-full object-cover" />
+              <img
+                src={GALLERY[0].src}
+                alt="Club highlight"
+                className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
             </div>
           </div>
         </div>
@@ -101,7 +115,13 @@ export default function HomePage() {
             {[0,1,2].map((i) => (
               <article key={i} className="group overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-slate-50 hover:bg-white transition shadow-sm">
                 <div className="aspect-video overflow-hidden">
-                  <img src={GALLERY[i+1].src} alt={GALLERY[i+1].alt} className="h-full w-full object-cover group-hover:scale-105 transition" />
+                  <img
+                    src={GALLERY[i+1].src}
+                    alt={GALLERY[i+1].alt}
+                    className="h-full w-full object-cover group-hover:scale-105 transition"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
                 <div className="p-5">
                   <h3 className="font-semibold">{["Build Night: AI Agents","Speaker: Product x AI","Mini Hackathon Finals"][i]}</h3>
@@ -121,7 +141,13 @@ export default function HomePage() {
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {GALLERY.map((g, i) => (
               <button key={i} className="relative group focus:outline-none" onClick={() => openLightbox(i)}>
-                <img src={g.src} alt={g.alt} className="h-40 md:h-48 w-full object-cover rounded-xl ring-1 ring-slate-200 shadow-sm group-hover:opacity-90"/>
+                <img
+                  src={g.src}
+                  alt={g.alt}
+                  className="h-40 md:h-48 w-full object-cover rounded-xl ring-1 ring-slate-200 shadow-sm group-hover:opacity-90"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <span className="sr-only">Open photo {i+1}</span>
               </button>
             ))}
@@ -142,6 +168,8 @@ export default function HomePage() {
                   src={`/${name.toLowerCase()}-logo.png`}
                   alt={name}
                   className="max-h-12"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
                     img.replaceWith(name);

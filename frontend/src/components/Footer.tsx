@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Footer() {
+function Footer() {
   return (
     <footer className="border-t border-slate-200 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-sm flex flex-col md:flex-row items-center justify-between gap-3">
@@ -27,3 +27,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default React.memo(Footer);
