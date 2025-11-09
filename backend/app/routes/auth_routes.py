@@ -54,7 +54,13 @@ def signup():
     except Exception as e:
         print(f"Failed to send welcome email: {e}")
 
-    return jsonify({"message": "User created successfully"}), 201
+    # Return token so user is auto-logged in
+    access_token = create_jwt(new_user.id)
+    return jsonify({
+        "message": "User created successfully",
+        "access_token": access_token,
+        "user_id": new_user.id
+    }), 201
 
 @auth_bp.route('/request-password-reset', methods=['POST'])
 def request_password_reset():

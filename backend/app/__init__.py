@@ -25,6 +25,17 @@ def create_app(config_object=None):
     migrate = Migrate(app, db)
     jwt.init_app(app)
 
+    # Configure JWT to use string identities
+    @jwt.user_identity_loader
+    def user_identity_lookup(user):
+        return str(user)
+    
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        identity = jwt_data["sub"]
+        from app.models import User
+        return User.query.get(int(identity))
+
     # Enable CORS for React frontend (Vite dev server runs on 5173)
     CORS(app, origins=["http://localhost:3000", "http://localhost:5173"], supports_credentials=True)
 
