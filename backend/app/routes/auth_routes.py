@@ -3,8 +3,15 @@ from flask_jwt_extended import create_access_token
 from .. import db
 from app.models import User, Profile
 from app.utils.auth import hash_password, verify_password, create_jwt
+from app.utils.email import send_password_reset_email, send_welcome_email
+import secrets
+from datetime import datetime, timedelta
+import os
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+# In-memory store for reset tokens (in production, use Redis or database)
+reset_tokens = {}
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -41,27 +48,55 @@ def signup():
     db.session.add(profile)
     db.session.commit()
 
+    # Send welcome email (optional, doesn't block signup if it fails)
+    try:
+        send_welcome_email(email, email)
+    except Exception as e:
+        print(f"Failed to send welcome email: {e}")
+
     return jsonify({"message": "User created successfully"}), 201
-
-import secrets
-from datetime import datetime, timedelta
-
-reset_tokens = {}  # in-memory store for dev/testing
 
 @auth_bp.route('/request-password-reset', methods=['POST'])
 def request_password_reset():
     data = request.get_json()
     email = data.get('email')
+    
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+    
     user = User.query.filter_by(email=email).first()
+    
+    # For security, always return success even if email doesn't exist
+    # This prevents email enumeration attacks
     if not user:
-        return jsonify({"error": "Email not found"}), 404
-
-    token = secrets.token_urlsafe(16)
-    # store token with expiry (e.g., 15 min)
-    reset_tokens[token] = {"user_id": user.id, "expires": datetime.utcnow() + timedelta(minutes=15)}
-
-    # for dev: just return token instead of sending email
-    return jsonify({"reset_token": token}), 200
+        return jsonify({"message": "If that email exists, a reset link has been sent"}), 200
+    
+    # Generate secure token
+    token = secrets.token_urlsafe(32)
+    
+    # Store token with expiry (15 minutes)
+    reset_tokens[token] = {
+        "user_id": user.id,
+        "email": email,
+        "expires": datetime.utcnow() + timedelta(minutes=15)
+    }
+    
+    # Build reset link
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    reset_link = f"{frontend_url}/#/reset-password?token={token}"
+    
+    # Send email
+    try:
+        email_sent = send_password_reset_email(email, reset_link, email)
+        if email_sent:
+            return jsonify({"message": "Password reset email sent"}), 200
+        else:
+            # Email failed but don't expose this to user
+            print(f"Failed to send reset email to {email}")
+            return jsonify({"message": "If that email exists, a reset link has been sent"}), 200
+    except Exception as e:
+        print(f"Error sending reset email: {e}")
+        return jsonify({"error": "Failed to send reset email. Please try again later."}), 500
 
 @auth_bp.route('/reset-password', methods=['POST'])
 def reset_password():
