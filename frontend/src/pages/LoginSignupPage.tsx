@@ -3,7 +3,10 @@ import { authApi, profileApi, authUtils } from "../utils/api";
 
 export default function LoginSignupPage() {
   const [profileData, setProfileData] = useState({
-    description: "",
+    full_name: "",
+    program: "",
+    year: "",
+    bio: "",
     skills: ""
   });
 
@@ -14,13 +17,32 @@ export default function LoginSignupPage() {
   const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Load profile when user logs in
+  const loadProfile = async () => {
+    setProfileLoading(true);
+    const response = await profileApi.getProfile();
+    setProfileLoading(false);
+
+    if (response.data) {
+      setProfileData({
+        full_name: response.data.full_name || "",
+        program: response.data.program || "",
+        year: response.data.year || "",
+        bio: response.data.bio || "",
+        skills: response.data.skills || ""
+      });
+      setUserEmail(response.data.email || "");
+    }
+  };
 
   // Check if user is already logged in on mount
   useEffect(() => {
     const token = authUtils.getToken();
     if (token) {
       setIsLoggedIn(true);
-      // Optionally load user profile here
+      loadProfile();
     }
   }, []);
 
@@ -34,10 +56,7 @@ export default function LoginSignupPage() {
     setLoading(true);
     setError(null);
 
-    const response = await profileApi.updateProfile(
-      profileData.description,
-      profileData.skills
-    );
+    const response = await profileApi.updateProfile(profileData);
 
     setLoading(false);
 
@@ -70,7 +89,7 @@ export default function LoginSignupPage() {
       authUtils.setToken(response.data.access_token);
       setIsLoggedIn(true);
       setUserEmail(email);
-      alert(`Successfully logged in as ${email}`);
+      loadProfile(); // Load profile after login
     }
   };
 
@@ -115,7 +134,7 @@ export default function LoginSignupPage() {
         authUtils.setToken(loginResponse.data.access_token);
         setIsLoggedIn(true);
         setUserEmail(email);
-        alert(`Account created successfully! Logged in as ${email}`);
+        loadProfile(); // Load profile after signup
       } else {
         alert("Account created! Please log in.");
       }
@@ -126,7 +145,13 @@ export default function LoginSignupPage() {
     authUtils.removeToken();
     setIsLoggedIn(false);
     setUserEmail("");
-    setProfileData({ description: "", skills: "" });
+    setProfileData({
+      full_name: "",
+      program: "",
+      year: "",
+      bio: "",
+      skills: ""
+    });
     alert("Successfully logged out!");
   };
 
@@ -368,6 +393,118 @@ export default function LoginSignupPage() {
             </div>
           </div>
         ) : null}
+
+        {/* Profile Editor - shown when logged in */}
+        {isLoggedIn && (
+          <div className="mt-8">
+            <h2 className="text-3xl font-bold mb-2">Your Profile</h2>
+            <p className="text-slate-600 mb-6">
+              Complete your profile to help others get to know you better.
+            </p>
+
+            {profileLoading ? (
+              <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 text-center">
+                <p className="text-slate-500">Loading profile...</p>
+              </div>
+            ) : (
+              <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
+                <form onSubmit={handleProfileSubmit} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.full_name}
+                        onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="John Doe"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Program <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.program}
+                        onChange={(e) => setProfileData({ ...profileData, program: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Computer Science"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Year <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={profileData.year}
+                      onChange={(e) => setProfileData({ ...profileData, year: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                      required
+                    >
+                      <option value="">Select your year</option>
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                      <option value="Graduate">Graduate</option>
+                      <option value="Alumni">Alumni</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                      placeholder="Tell us about yourself, your interests, and what you're passionate about..."
+                      rows={4}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      A brief introduction about yourself
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Skills
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.skills}
+                      onChange={(e) => setProfileData({ ...profileData, skills: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="Python, JavaScript, React, Flask, UI/UX Design..."
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Comma-separated list of your technical skills
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

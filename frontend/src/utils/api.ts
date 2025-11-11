@@ -124,12 +124,18 @@ export const profileApi = {
   /**
    * Update user profile
    */
-  updateProfile: async (description: string, skills: string) => {
+  updateProfile: async (profileData: {
+    full_name?: string;
+    program?: string;
+    year?: string;
+    bio?: string;
+    skills?: string;
+  }) => {
     return apiRequest(
       '/api/profile/',
       {
         method: 'PUT',
-        body: JSON.stringify({ description, skills }),
+        body: JSON.stringify(profileData),
       }
     );
   },
