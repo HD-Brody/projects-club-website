@@ -42,8 +42,10 @@ def create_app(config_object=None):
     # Blueprints
     from app.routes.auth_routes import auth_bp
     from app.routes.profile_routes import profile_bp
+    from app.routes.project_routes import project_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp, url_prefix='/api/profile')
+    app.register_blueprint(project_bp, url_prefix='/api/projects')
 
     # Health check route
     @app.route("/health")

@@ -114,7 +114,7 @@ def send_password_reset_email(to_email: str, reset_link: str, user_email: str) -
                 <p>We received a request to reset the password for your UofT Projects Club account (<strong>{user_email}</strong>).</p>
                 <p>Click the button below to reset your password:</p>
                 <div style="text-align: center;">
-                    <a href="{reset_link}" class="button">Reset Password</a>
+                    <a href="{reset_link}" class="button" style="display: inline-block; padding: 12px 30px; background: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0;">Reset Password</a>
                 </div>
                 <p>Or copy and paste this link into your browser:</p>
                 <p style="word-break: break-all; background: white; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">

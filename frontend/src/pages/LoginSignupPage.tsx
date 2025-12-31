@@ -196,7 +196,6 @@ export default function LoginSignupPage() {
               </div>
               <div>
                 <p className="font-medium text-green-800">Signed in as {userEmail}</p>
-                <p className="text-sm text-green-600">You can now access all features</p>
               </div>
             </div>
             <button 

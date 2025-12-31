@@ -20,6 +20,7 @@ function Header({ onNavigate }: HeaderProps) {
           <a href="#events" className="hover:text-slate-900">Events</a>
           <a href="#gallery" className="hover:text-slate-900">Photos</a>
           <a href="#sponsors" className="hover:text-slate-900">Sponsors</a>
+          <a href="#/projects" className="hover:text-slate-900">Projects</a>
           
           <a 
             href="#/login" 

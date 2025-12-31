@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import EscapeRoomPage from "./pages/EscapeRoomPage";
 import LoginSignupPage from "./pages/LoginSignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProjectSearchPage from "./pages/ProjectSearchPage";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "");
@@ -25,6 +26,10 @@ export default function App() {
 
   if (route.startsWith('#/reset-password')) {
     return <ResetPasswordPage />;
+  }
+
+  if (route === '#/projects') {
+    return <ProjectSearchPage />;
   }
 
   return <HomePage />;

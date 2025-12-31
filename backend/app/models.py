@@ -32,6 +32,8 @@ class Project(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
+    skills = db.Column(db.Text)  # Comma-separated skills/tags for search
+    category = db.Column(db.String(64))  # Project category (e.g., Web, Mobile, AI)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
