@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { authUtils } from "../utils/api";
 
 interface HeaderProps {
@@ -11,7 +11,13 @@ function getProfileInitial(): string {
     if (cached) {
       const profile = JSON.parse(cached);
       const name = profile.full_name || "";
-      return name.trim().charAt(0).toUpperCase() || "U";
+      const initials = name
+        .split(" ")
+        .filter(Boolean)
+        .map((part: string) => part[0]?.toUpperCase())
+        .join("")
+        .slice(0, 2);
+      return initials || "U";
     }
   } catch {}
   return "U";
@@ -19,6 +25,8 @@ function getProfileInitial(): string {
 
 function Header({ onNavigate }: HeaderProps) {
   const isAuthenticated = authUtils.isAuthenticated();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     authUtils.removeToken();
@@ -26,12 +34,22 @@ function Header({ onNavigate }: HeaderProps) {
     window.location.reload();
   };
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/80 bg-white/90 border-b border-slate-200 shadow-[0_1px_12px_rgba(15,23,42,0.06)] will-change-transform">
+    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/85 bg-white/95 border-b border-slate-200 will-change-transform">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
-            className="h-11 w-11 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold text-base tracking-tight shadow-sm"
+            className="h-10 w-10 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold text-sm tracking-tight"
             aria-label="Projects Club logo"
           >
             PC
@@ -42,8 +60,8 @@ function Header({ onNavigate }: HeaderProps) {
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
-          <div className="flex items-center gap-5 pr-5 border-r border-slate-200">
+        <nav className="hidden md:flex items-center justify-between gap-6 text-sm text-slate-600">
+          <div className="flex items-center gap-5 pr-5 text-slate-600/85 border-r border-slate-200">
             <a href="#about" className="transition hover:text-slate-900">About</a>
             <a href="#events" className="transition hover:text-slate-900">Events</a>
             <a href="#gallery" className="transition hover:text-slate-900">Photos</a>
@@ -51,61 +69,75 @@ function Header({ onNavigate }: HeaderProps) {
             <a href="#/projects" className="transition hover:text-slate-900">Projects</a>
           </div>
 
-          <div className="flex items-center gap-3 pl-1">
-            {isAuthenticated && (
-              <>
-                <a
-                  href="#/applications"
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
-                >
-                  My Applications
-                </a>
-                <a
-                  href="#/manage-projects"
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
-                >
-                  Manage Projects
-                </a>
-                <a
-                  href="#/submit-project"
-                  className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm"
-                >
-                  + Create Project
-                </a>
-              </>
-            )}
-
-            {isAuthenticated ? (
-              <>
-                <a
-                  href="#/login"
-                  className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 grid place-items-center text-sm font-semibold hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 transition"
-                  title="View Profile"
-                >
-                  {getProfileInitial()}
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
+          <div className="flex items-center gap-3.5 pl-5">
+            {!isAuthenticated && (
               <a
                 href="#/login"
-                className="px-4 py-2 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 transition"
+                className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 shadow-sm hover:-translate-y-px hover:shadow transition"
               >
                 Login/Signup
               </a>
             )}
 
-            <a
-              href="#join"
-              className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:opacity-90 transition shadow-sm"
-            >
-              Join us
-            </a>
+            {isAuthenticated ? (
+              <a
+                href="#/submit-project"
+                className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:opacity-90 transition shadow-sm"
+              >
+                + Create Project
+              </a>
+            ) : (
+              <a
+                href="#join"
+                className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:opacity-90 transition shadow-sm"
+              >
+                Join us
+              </a>
+            )}
+
+            {isAuthenticated && (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-600 to-indigo-600 text-white grid place-items-center text-sm font-semibold shadow-[0_6px_16px_rgba(59,130,246,0.2)] hover:ring-2 hover:ring-sky-200 hover:ring-offset-1 transition"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  title="Account"
+                >
+                  {getProfileInitial()}
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.12)] py-2 text-sm">
+                    <a
+                      href="#/login"
+                      className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    >
+                      Profile
+                    </a>
+                    <a
+                      href="#/applications"
+                      className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    >
+                      My Applications
+                    </a>
+                    <a
+                      href="#/manage-projects"
+                      className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    >
+                      Manage Projects
+                    </a>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 text-slate-600 hover:bg-slate-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </nav>
       </div>
