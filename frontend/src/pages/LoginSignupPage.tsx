@@ -18,6 +18,17 @@ export default function LoginSignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const skillsList = profileData.skills
+    ? profileData.skills.split(",").map((skill) => skill.trim()).filter(Boolean)
+    : [];
+
+  const initials = (profileData.full_name || userEmail || "").split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+    .slice(0, 2);
 
   // Load profile when user logs in
   const loadProfile = async () => {
@@ -26,14 +37,17 @@ export default function LoginSignupPage() {
     setProfileLoading(false);
 
     if (response.data) {
-      setProfileData({
+      const profile = {
         full_name: response.data.full_name || "",
         program: response.data.program || "",
         year: response.data.year || "",
         bio: response.data.bio || "",
         skills: response.data.skills || ""
-      });
+      };
+      setProfileData(profile);
       setUserEmail(response.data.email || "");
+      // Cache for navbar avatar
+      localStorage.setItem("profile_cache", JSON.stringify(profile));
     }
   };
 
@@ -54,10 +68,7 @@ export default function LoginSignupPage() {
     }
 
     setLoading(true);
-    setError(null);
-
     const response = await profileApi.updateProfile(profileData);
-
     setLoading(false);
 
     if (response.error) {
@@ -65,6 +76,7 @@ export default function LoginSignupPage() {
       alert(`Error: ${response.error}`);
     } else {
       alert("Profile saved successfully!");
+      setIsEditing(false);
     }
   };
 
@@ -143,8 +155,10 @@ export default function LoginSignupPage() {
 
   const handleLogout = () => {
     authUtils.removeToken();
+    localStorage.removeItem("profile_cache");
     setIsLoggedIn(false);
     setUserEmail("");
+    setIsEditing(false);
     setProfileData({
       full_name: "",
       program: "",
@@ -181,9 +195,9 @@ export default function LoginSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 px-4 py-8 md:px-6 md:py-10">
       <div className="max-w-4xl mx-auto">
-        <a href="#" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-8">
+        <a href="#" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6 text-sm">
           ← Back to Home
         </a>
         
@@ -277,28 +291,33 @@ export default function LoginSignupPage() {
           </div>
         )}
 
-        <h1 className="text-4xl font-bold mb-6">
-          {isLoggedIn ? "Welcome Back!" : "Login/Signup"}
-        </h1>
-        <p className="text-lg text-slate-600 mb-8">
-          {isLoggedIn 
-            ? "Manage your account and build your professional profile."
-            : "Welcome to Projects Club! Sign in to your account or create a new one to get started."
-          }
-        </p>
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            {isLoggedIn ? "Welcome Back!" : "Sign in or create your account"}
+          </h1>
+          <p className="text-sm md:text-base text-slate-600 mt-2">
+            {isLoggedIn 
+              ? "Manage your account and build your professional profile."
+              : "Join the Projects Club community to collaborate and grow your skills."
+            }
+          </p>
+        </div>
         
         {!isLoggedIn ? (
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
             {/* Login Form */}
-            <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
-              <h3 className="font-semibold text-2xl mb-6">Login</h3>
+            <div className="p-6 md:p-7 bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-2xl text-slate-900">Login</h3>
+                <span className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600">Returning members</span>
+              </div>
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
                   <input 
                     type="email" 
                     name="email"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Enter your email"
                     required
                   />
@@ -308,7 +327,7 @@ export default function LoginSignupPage() {
                   <input 
                     type="password" 
                     name="password"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Enter your password"
                     required
                   />
@@ -319,7 +338,7 @@ export default function LoginSignupPage() {
                   <button 
                     type="button"
                     onClick={() => setShowResetPassword(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-sm text-slate-500 hover:text-slate-800 hover:underline transition"
                   >
                     Forgot your password?
                   </button>
@@ -328,7 +347,7 @@ export default function LoginSignupPage() {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
@@ -336,15 +355,18 @@ export default function LoginSignupPage() {
             </div>
 
             {/* Signup Form */}
-            <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
-              <h3 className="font-semibold text-2xl mb-6">Sign Up</h3>
+            <div className="p-6 md:p-7 bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-2xl text-slate-900">Sign Up</h3>
+                <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700">New here</span>
+              </div>
               <form onSubmit={handleSignupSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
                   <input 
                     type="text" 
                     name="name"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Enter your full name"
                     required
                   />
@@ -354,7 +376,7 @@ export default function LoginSignupPage() {
                   <input 
                     type="email" 
                     name="signup-email"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Enter your email"
                     required
                   />
@@ -364,7 +386,7 @@ export default function LoginSignupPage() {
                   <input 
                     type="password" 
                     name="signup-password"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Create a password"
                     required
                   />
@@ -375,7 +397,7 @@ export default function LoginSignupPage() {
                   <input 
                     type="password" 
                     name="confirm-password"
-                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-slate-900 outline-none"
+                    className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
                     placeholder="Confirm your password"
                     required
                   />
@@ -384,7 +406,7 @@ export default function LoginSignupPage() {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
@@ -395,112 +417,209 @@ export default function LoginSignupPage() {
 
         {/* Profile Editor - shown when logged in */}
         {isLoggedIn && (
-          <div className="mt-8">
-            <h2 className="text-3xl font-bold mb-2">Your Profile</h2>
-            <p className="text-slate-600 mb-6">
-              Complete your profile to help others get to know you better.
-            </p>
-
+          <div className="mt-10 space-y-4">
             {profileLoading ? (
               <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 text-center">
                 <p className="text-slate-500">Loading profile...</p>
               </div>
             ) : (
-              <div className="p-8 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
-                <form onSubmit={handleProfileSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Full Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.full_name}
-                        onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="John Doe"
-                        required
-                      />
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+                  <div className="flex flex-col md:flex-row md:items-center gap-5">
+                    <div className="h-16 w-16 rounded-full bg-blue-100 text-blue-700 font-semibold grid place-items-center text-xl uppercase">
+                      {initials || "U"}
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Program <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.program}
-                        onChange={(e) => setProfileData({ ...profileData, program: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Computer Science"
-                        required
-                      />
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-2xl font-bold text-slate-900 truncate">{profileData.full_name || "Your Name"}</h2>
+                      <p className="text-slate-600 mt-0.5">
+                        {profileData.program && profileData.year 
+                          ? `${profileData.program} · ${profileData.year}`
+                          : profileData.program || profileData.year || "Add your program and year"}
+                      </p>
+                      <p className="text-sm text-slate-500">{userEmail}</p>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Year <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={profileData.year}
-                      onChange={(e) => setProfileData({ ...profileData, year: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                      required
-                    >
-                      <option value="">Select your year</option>
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                      <option value="Graduate">Graduate</option>
-                      <option value="Alumni">Alumni</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Bio
-                    </label>
-                    <textarea
-                      value={profileData.bio}
-                      onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-                      placeholder="Tell us about yourself, your interests, and what you're passionate about..."
-                      rows={4}
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      A brief introduction about yourself
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Skills
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.skills}
-                      onChange={(e) => setProfileData({ ...profileData, skills: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                      placeholder="Python, JavaScript, React, Flask, UI/UX Design..."
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Comma-separated list of your technical skills
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
                     <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-sm transition"
                     >
-                      {loading ? 'Saving...' : 'Save Profile'}
+                      Edit Profile
                     </button>
                   </div>
-                </form>
-              </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-6 rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 h-full flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">About</p>
+                        <h3 className="text-lg font-semibold text-slate-900">Your story</h3>
+                      </div>
+                    </div>
+                    <p className="text-slate-700 leading-relaxed">
+                      {profileData.bio?.trim() ? profileData.bio : "Add a short bio so members can get to know you."}
+                    </p>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 h-full flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Skills</p>
+                        <h3 className="text-lg font-semibold text-slate-900">What you bring</h3>
+                      </div>
+                    </div>
+                    {skillsList.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {skillsList.map((skill) => (
+                          <span key={skill} className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-sm">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500">No skills listed yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="p-8 bg-white rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Edit mode</p>
+                        <h3 className="text-xl font-semibold text-slate-900">Update your details</h3>
+                        <p className="text-slate-600 text-sm mt-1">Keep your profile current so members know how to collaborate with you.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="text-sm text-slate-500 hover:text-slate-800"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <form onSubmit={handleProfileSubmit} className="space-y-8">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Basic Info</p>
+                          <h3 className="text-lg font-semibold text-slate-900 mt-1">Who you are</h3>
+                        </div>
+                        <div className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Required</div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Full Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData.full_name}
+                            onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="John Doe"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Program <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData.program}
+                            onChange={(e) => setProfileData({ ...profileData, program: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Computer Science"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Year <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={profileData.year}
+                          onChange={(e) => setProfileData({ ...profileData, year: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                          required
+                        >
+                          <option value="">Select your year</option>
+                          <option value="1st Year">1st Year</option>
+                          <option value="2nd Year">2nd Year</option>
+                          <option value="3rd Year">3rd Year</option>
+                          <option value="4th Year">4th Year</option>
+                          <option value="Graduate">Graduate</option>
+                          <option value="Alumni">Alumni</option>
+                        </select>
+                      </div>
+
+                      <div className="border-t border-slate-200 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">About You</p>
+                            <h3 className="text-lg font-semibold text-slate-900 mt-1">Share a bit of your story</h3>
+                          </div>
+                          <div className="text-xs text-slate-500">Visible to club members</div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Bio
+                          </label>
+                          <textarea
+                            value={profileData.bio}
+                            onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                            placeholder="Tell us about yourself, your interests, and what you're passionate about..."
+                            rows={4}
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            A brief introduction about yourself
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-200 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Skills</p>
+                            <h3 className="text-lg font-semibold text-slate-900 mt-1">What you work with</h3>
+                          </div>
+                          <div className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Helps matching</div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Skills
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData.skills}
+                            onChange={(e) => setProfileData({ ...profileData, skills: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Python, JavaScript, React, Flask, UI/UX Design..."
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            Comma-separated list of your technical skills
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="flex-1 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? 'Saving...' : 'Save Profile'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

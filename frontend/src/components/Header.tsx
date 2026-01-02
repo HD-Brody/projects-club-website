@@ -5,6 +5,18 @@ interface HeaderProps {
   onNavigate?: (route: string) => void;
 }
 
+function getProfileInitial(): string {
+  try {
+    const cached = localStorage.getItem("profile_cache");
+    if (cached) {
+      const profile = JSON.parse(cached);
+      const name = profile.full_name || "";
+      return name.trim().charAt(0).toUpperCase() || "U";
+    }
+  } catch {}
+  return "U";
+}
+
 function Header({ onNavigate }: HeaderProps) {
   const isAuthenticated = authUtils.isAuthenticated();
 
@@ -64,12 +76,21 @@ function Header({ onNavigate }: HeaderProps) {
             )}
 
             {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition"
-              >
-                Logout
-              </button>
+              <>
+                <a
+                  href="#/login"
+                  className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 grid place-items-center text-sm font-semibold hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 transition"
+                  title="View Profile"
+                >
+                  {getProfileInitial()}
+                </a>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition"
+                >
+                  Logout
+                </button>
+              </>
             ) : (
               <a
                 href="#/login"
