@@ -15,54 +15,77 @@ function Header({ onNavigate }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border-b border-slate-200 will-change-transform">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/80 bg-white/90 border-b border-slate-200 shadow-[0_1px_12px_rgba(15,23,42,0.06)] will-change-transform">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-slate-900 text-white grid place-items-center font-bold select-none" aria-label="Projects Club logo">PC</div>
+          <div
+            className="h-11 w-11 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold text-base tracking-tight shadow-sm"
+            aria-label="Projects Club logo"
+          >
+            PC
+          </div>
           <div className="leading-tight">
-            <p className="font-semibold">UofT Projects Club</p>
+            <p className="font-semibold text-slate-900">UofT Projects Club</p>
             <p className="text-xs text-slate-500">Bridge business × tech</p>
           </div>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="#about" className="hover:text-slate-900">About</a>
-          <a href="#events" className="hover:text-slate-900">Events</a>
-          <a href="#gallery" className="hover:text-slate-900">Photos</a>
-          <a href="#sponsors" className="hover:text-slate-900">Sponsors</a>
-          <a href="#/projects" className="hover:text-slate-900">Projects</a>
-          
-          {isAuthenticated && (
-            <>
-              <a href="#/applications" className="hover:text-slate-900">My Applications</a>
-              <a href="#/manage-projects" className="hover:text-slate-900">Manage Projects</a>
-              <a href="#/submit-project" className="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors">
-                + Create Project
+
+        <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
+          <div className="flex items-center gap-5 pr-5 border-r border-slate-200">
+            <a href="#about" className="transition hover:text-slate-900">About</a>
+            <a href="#events" className="transition hover:text-slate-900">Events</a>
+            <a href="#gallery" className="transition hover:text-slate-900">Photos</a>
+            <a href="#sponsors" className="transition hover:text-slate-900">Sponsors</a>
+            <a href="#/projects" className="transition hover:text-slate-900">Projects</a>
+          </div>
+
+          <div className="flex items-center gap-3 pl-1">
+            {isAuthenticated && (
+              <>
+                <a
+                  href="#/applications"
+                  className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+                >
+                  My Applications
+                </a>
+                <a
+                  href="#/manage-projects"
+                  className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+                >
+                  Manage Projects
+                </a>
+                <a
+                  href="#/submit-project"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm"
+                >
+                  + Create Project
+                </a>
+              </>
+            )}
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition"
+              >
+                Logout
+              </button>
+            ) : (
+              <a
+                href="#/login"
+                className="px-4 py-2 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 transition"
+              >
+                Login/Signup
               </a>
-            </>
-          )}
-          
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
+            )}
+
+            <a
+              href="#join"
+              className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:opacity-90 transition shadow-sm"
             >
-              Logout
-            </button>
-          ) : (
-            <a 
-              href="#/login" 
-              className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-            >
-              Login/Signup
+              Join us
             </a>
-          )}
-          
-          <a href="#join" className="px-3 py-1.5 rounded-full bg-slate-900 text-white hover:opacity-90">Join us</a>
-          
-          {/* <a href="#/escape" aria-label="Open Escape Room registration" className="ml-3 inline-flex items-center gap-2 px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-pink-500 text-white font-semibold shadow-2xl hover:scale-105 transform transition-all animate-pulse">
-            <span className="text-lg">🧩</span>
-            <span>Register: Escape Room</span>
-          </a> */}
+          </div>
         </nav>
       </div>
     </header>
