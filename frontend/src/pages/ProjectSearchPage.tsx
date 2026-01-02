@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { projectApi, authUtils } from "../utils/api";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
@@ -54,6 +55,14 @@ export default function ProjectSearchPage() {
   const [totalResults, setTotalResults] = useState(0);
   const limit = 10;
 
+  // Apply modal state
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [applyRole, setApplyRole] = useState("");
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applyError, setApplyError] = useState("");
+  const [applySuccess, setApplySuccess] = useState("");
+
   // Fetch projects based on current filters
   const fetchProjects = async () => {
     setLoading(true);
@@ -91,17 +100,46 @@ export default function ProjectSearchPage() {
     fetchProjects();
   }, [searchQuery, selectedSkills, selectedCategory, sortBy, currentPage]);
 
-  // Reset to page 1 when filters change
-  const handleFilterChange = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
+  const handleApplyClick = (project: Project) => {
+    if (!authUtils.isAuthenticated()) {
+      alert("Please log in to apply for projects");
+      window.location.hash = "#/login";
+      return;
     }
+
+    setSelectedProject(project);
+    setShowApplyModal(true);
+    setApplyRole("");
+    setApplyError("");
+    setApplySuccess("");
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleFilterChange();
-    fetchProjects();
+
+    if (!selectedProject || !applyRole.trim()) {
+      setApplyError("Please enter a role");
+      return;
+    }
+
+    setApplyLoading(true);
+    setApplyError("");
+    setApplySuccess("");
+
+    const result = await projectApi.applyToProject(selectedProject.id, applyRole);
+
+    if (result.error) {
+      setApplyError(result.error);
+    } else {
+      setApplySuccess("Application submitted successfully!");
+      setTimeout(() => {
+        setShowApplyModal(false);
+        setApplyRole("");
+        setSelectedProject(null);
+      }, 2000);
+    }
+
+    setApplyLoading(false);
   };
 
   return (
@@ -121,7 +159,7 @@ export default function ProjectSearchPage() {
 
         {/* Search and Filters */}
         <div className="mb-8 p-6 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
-          <form onSubmit={handleSearchSubmit} className="space-y-4">
+          <form className="space-y-4">
             {/* Search Bar */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -187,14 +225,8 @@ export default function ProjectSearchPage() {
               </div>
             </div>
 
-            {/* Search Button */}
+            {/* Clear Filters Button */}
             <div className="flex gap-3">
-              <button
-                type="submit"
-                className="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium"
-              >
-                Search
-              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -297,8 +329,11 @@ export default function ProjectSearchPage() {
                       <span className="text-sm text-slate-600">
                         {project.application_count} application{project.application_count !== 1 ? 's' : ''}
                       </span>
-                      <button className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">
-                        View Details
+                      <button
+                        onClick={() => handleApplyClick(project)}
+                        className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium"
+                      >
+                        Apply Now
                       </button>
                     </div>
                   </div>
@@ -333,6 +368,67 @@ export default function ProjectSearchPage() {
           </>
         )}
       </div>
+
+      {/* Apply Modal */}
+      {showApplyModal && selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Apply for "{selectedProject.title}"
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Let the project owner know what role you're interested in.
+              </p>
+
+              {applyError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm">{applyError}</p>
+                </div>
+              )}
+
+              {applySuccess && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-700 text-sm">{applySuccess}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleApplySubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                    Role *
+                  </label>
+                  <input
+                    type="text"
+                    id="role"
+                    value={applyRole}
+                    onChange={(e) => setApplyRole(e.target.value)}
+                    placeholder="e.g., Frontend Developer, Designer, Project Manager"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowApplyModal(false)}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={applyLoading}
+                    className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                  >
+                    {applyLoading ? "Submitting..." : "Submit Application"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

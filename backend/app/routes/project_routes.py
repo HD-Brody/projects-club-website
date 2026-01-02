@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, or_
 from .. import db
-from app.models import Project, User, Profile
+from app.models import Project, User, Profile, Application
 import math
 
 project_bp = Blueprint('project', __name__)
@@ -10,6 +11,57 @@ project_bp = Blueprint('project', __name__)
 def list_projects():
     # placeholder listing
     return jsonify({"projects": []})
+
+@project_bp.route('/', methods=['POST'])
+@jwt_required()
+def create_project():
+    """
+    Create a new project.
+    Required: title, description, category
+    Optional: skills (comma-separated)
+    """
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+    
+    data = request.get_json() or {}
+    
+    # Validate required fields
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    category = data.get('category', '').strip()
+    skills = data.get('skills', '').strip()
+    
+    if not title:
+        return jsonify({"msg": "Title is required"}), 400
+    if not description:
+        return jsonify({"msg": "Description is required"}), 400
+    if not category:
+        return jsonify({"msg": "Category is required"}), 400
+    
+    # Create project
+    project = Project(
+        owner_id=user_id,
+        title=title,
+        description=description,
+        category=category,
+        skills=skills or None
+    )
+    
+    db.session.add(project)
+    db.session.commit()
+    
+    return jsonify({
+        'id': project.id,
+        'title': project.title,
+        'description': project.description,
+        'skills': project.skills,
+        'category': project.category,
+        'owner_id': project.owner_id,
+        'created_at': project.created_at.isoformat()
+    }), 201
 
 @project_bp.route('/search', methods=['GET'])
 def search_projects():
@@ -60,7 +112,6 @@ def search_projects():
         query = query.order_by(Project.title.asc())
     elif sort_by == 'most_applications':
         # Count applications per project and sort
-        from app.models import Application
         query = query.outerjoin(Application).group_by(Project.id).order_by(
             func.count(Application.id).desc()
         )
@@ -107,7 +158,165 @@ def search_projects():
         'limit': limit
     }), 200
 
+@project_bp.route('/applications/me', methods=['GET'])
+@jwt_required()
+def get_my_applications():
+    """
+    Get all applications submitted by the current user.
+    """
+    user_id = int(get_jwt_identity())
+    
+    applications = Application.query.filter_by(user_id=user_id).all()
+    
+    apps_data = []
+    for app in applications:
+        project = Project.query.get(app.project_id)
+        owner = User.query.get(project.owner_id) if project else None
+        owner_profile = Profile.query.filter_by(user_id=project.owner_id).first() if project else None
+        
+        apps_data.append({
+            'id': app.id,
+            'project_id': app.project_id,
+            'role': app.role,
+            'status': app.status,
+            'created_at': app.created_at.isoformat(),
+            'project': {
+                'id': project.id if project else None,
+                'title': project.title if project else None,
+                'category': project.category if project else None,
+                'owner': {
+                    'id': owner.id if owner else None,
+                    'name': owner_profile.full_name if owner_profile else None
+                }
+            } if project else None
+        })
+    
+    return jsonify(apps_data), 200
+
+@project_bp.route('/<int:project_id>/applications', methods=['GET'])
+@jwt_required()
+def get_project_applications(project_id):
+    """
+    Get all applications for a project (owner-only).
+    """
+    user_id = int(get_jwt_identity())
+    project = Project.query.get(project_id)
+    
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    
+    if project.owner_id != user_id:
+        return jsonify({"msg": "Only project owner can view applications"}), 403
+    
+    applications = Application.query.filter_by(project_id=project_id).all()
+    
+    apps_data = []
+    for app in applications:
+        applicant = User.query.get(app.user_id)
+        applicant_profile = Profile.query.filter_by(user_id=app.user_id).first()
+        
+        apps_data.append({
+            'id': app.id,
+            'project_id': app.project_id,
+            'user_id': app.user_id,
+            'role': app.role,
+            'status': app.status,
+            'created_at': app.created_at.isoformat(),
+            'applicant': {
+                'id': applicant.id if applicant else None,
+                'email': applicant.email if applicant else None,
+                'name': applicant_profile.full_name if applicant_profile else None
+            }
+        })
+    
+    return jsonify(apps_data), 200
+
 @project_bp.route('/<int:project_id>/apply', methods=['POST'])
+@jwt_required()
 def apply_project(project_id):
+    """
+    Submit an application to a project.
+    Required: role
+    """
+    user_id = int(get_jwt_identity())
+    
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    
+    # Cannot apply to own project
+    if project.owner_id == user_id:
+        return jsonify({"msg": "Cannot apply to your own project"}), 400
+    
+    # Check for duplicate application
+    existing_app = Application.query.filter_by(
+        project_id=project_id,
+        user_id=user_id
+    ).first()
+    
+    if existing_app:
+        return jsonify({"msg": "Already applied to this project"}), 400
+    
     data = request.get_json() or {}
-    return jsonify({"msg": "application placeholder"}), 201
+    role = data.get('role', '').strip()
+    
+    if not role:
+        return jsonify({"msg": "Role is required"}), 400
+    
+    # Create application with pending status
+    application = Application(
+        project_id=project_id,
+        user_id=user_id,
+        role=role,
+        status='pending'
+    )
+    
+    db.session.add(application)
+    db.session.commit()
+    
+    return jsonify({
+        'id': application.id,
+        'project_id': application.project_id,
+        'user_id': application.user_id,
+        'role': application.role,
+        'status': application.status,
+        'created_at': application.created_at.isoformat()
+    }), 201
+
+@project_bp.route('/applications/<int:application_id>/status', methods=['PUT'])
+@jwt_required()
+def update_application_status(application_id):
+    """
+    Update application status (owner-only).
+    Required: status (accepted or rejected)
+    """
+    user_id = int(get_jwt_identity())
+    
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({"msg": "Application not found"}), 404
+    
+    project = Project.query.get(application.project_id)
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    
+    if project.owner_id != user_id:
+        return jsonify({"msg": "Only project owner can update applications"}), 403
+    
+    data = request.get_json() or {}
+    new_status = data.get('status', '').strip()
+    
+    if new_status not in ['accepted', 'rejected']:
+        return jsonify({"msg": "Status must be 'accepted' or 'rejected'"}), 400
+    
+    application.status = new_status
+    db.session.commit()
+    
+    return jsonify({
+        'id': application.id,
+        'project_id': application.project_id,
+        'user_id': application.user_id,
+        'role': application.role,
+        'status': application.status,
+        'created_at': application.created_at.isoformat()
+    }), 200

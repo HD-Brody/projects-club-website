@@ -46,8 +46,10 @@ class Application(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     role = db.Column(db.String(64))
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
     project = db.relationship('Project', back_populates='applications')
+    applicant = db.relationship('User', back_populates='applications')
     applicant = db.relationship('User', back_populates='applications')

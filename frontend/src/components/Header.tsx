@@ -1,10 +1,19 @@
 import React from "react";
+import { authUtils } from "../utils/api";
 
 interface HeaderProps {
   onNavigate?: (route: string) => void;
 }
 
 function Header({ onNavigate }: HeaderProps) {
+  const isAuthenticated = authUtils.isAuthenticated();
+
+  const handleLogout = () => {
+    authUtils.removeToken();
+    window.location.hash = "#";
+    window.location.reload();
+  };
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border-b border-slate-200 will-change-transform">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -22,12 +31,31 @@ function Header({ onNavigate }: HeaderProps) {
           <a href="#sponsors" className="hover:text-slate-900">Sponsors</a>
           <a href="#/projects" className="hover:text-slate-900">Projects</a>
           
-          <a 
-            href="#/login" 
-            className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-          >
-            Login/Signup
-          </a>
+          {isAuthenticated && (
+            <>
+              <a href="#/applications" className="hover:text-slate-900">My Applications</a>
+              <a href="#/manage-projects" className="hover:text-slate-900">Manage Projects</a>
+              <a href="#/submit-project" className="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors">
+                + Create Project
+              </a>
+            </>
+          )}
+          
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
+          ) : (
+            <a 
+              href="#/login" 
+              className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              Login/Signup
+            </a>
+          )}
           
           <a href="#join" className="px-3 py-1.5 rounded-full bg-slate-900 text-white hover:opacity-90">Join us</a>
           

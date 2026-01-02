@@ -4,6 +4,9 @@ import EscapeRoomPage from "./pages/EscapeRoomPage";
 import LoginSignupPage from "./pages/LoginSignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProjectSearchPage from "./pages/ProjectSearchPage";
+import SubmitProjectPage from "./pages/SubmitProjectPage";
+import ApplicationDashboardPage from "./pages/ApplicationDashboardPage";
+import ProjectOwnerPanel from "./pages/ProjectOwnerPanel";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "");
@@ -30,6 +33,18 @@ export default function App() {
 
   if (route === '#/projects') {
     return <ProjectSearchPage />;
+  }
+
+  if (route === '#/submit-project') {
+    return <SubmitProjectPage />;
+  }
+
+  if (route === '#/applications') {
+    return <ApplicationDashboardPage />;
+  }
+
+  if (route === '#/manage-projects') {
+    return <ProjectOwnerPanel />;
   }
 
   return <HomePage />;

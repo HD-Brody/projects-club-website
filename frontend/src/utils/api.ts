@@ -112,6 +112,90 @@ export const authApi = {
   },
 };
 
+// Project API calls
+export const projectApi = {
+  /**
+   * Search projects with filters
+   */
+  searchProjects: async (params?: {
+    q?: string;
+    skills?: string;
+    category?: string;
+    sort?: 'newest' | 'az' | 'most_applications';
+    page?: number;
+    limit?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.q) searchParams.append('q', params.q);
+    if (params?.skills) searchParams.append('skills', params.skills);
+    if (params?.category) searchParams.append('category', params.category);
+    if (params?.sort) searchParams.append('sort', params.sort);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return apiRequest(`/api/projects/search${query ? '?' + query : ''}`);
+  },
+
+  /**
+   * Create a new project
+   */
+  createProject: async (projectData: {
+    title: string;
+    description: string;
+    category: string;
+    skills?: string;
+  }) => {
+    return apiRequest(
+      '/api/projects/',
+      {
+        method: 'POST',
+        body: JSON.stringify(projectData),
+      }
+    );
+  },
+
+  /**
+   * Apply to a project
+   */
+  applyToProject: async (projectId: number, role: string) => {
+    return apiRequest(
+      `/api/projects/${projectId}/apply`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ role }),
+      }
+    );
+  },
+
+  /**
+   * Get user's applications
+   */
+  getMyApplications: async () => {
+    return apiRequest('/api/projects/applications/me');
+  },
+
+  /**
+   * Get applications for a project (owner-only)
+   */
+  getProjectApplications: async (projectId: number) => {
+    return apiRequest(`/api/projects/${projectId}/applications`);
+  },
+
+  /**
+   * Update application status
+   */
+  updateApplicationStatus: async (applicationId: number, status: 'accepted' | 'rejected') => {
+    return apiRequest(
+      `/api/projects/applications/${applicationId}/status`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      }
+    );
+  },
+};
+
 // Profile API calls
 export const profileApi = {
   /**
