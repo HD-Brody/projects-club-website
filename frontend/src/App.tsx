@@ -2,6 +2,7 @@
 import HomePage from "./pages/HomePage";
 import EscapeRoomPage from "./pages/EscapeRoomPage";
 import LoginSignupPage from "./pages/LoginSignupPage";
+import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProjectSearchPage from "./pages/ProjectSearchPage";
 import SubmitProjectPage from "./pages/SubmitProjectPage";
@@ -25,6 +26,10 @@ export default function App() {
 
   if (route === '#/login') {
     return <LoginSignupPage />;
+  }
+
+  if (route === '#/profile') {
+    return <ProfilePage />;
   }
 
   if (route.startsWith('#/reset-password')) {

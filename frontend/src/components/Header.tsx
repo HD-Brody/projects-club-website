@@ -111,7 +111,7 @@ function Header({ onNavigate }: HeaderProps) {
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.12)] py-2 text-sm">
                     <a
-                      href="#/login"
+                      href="#/profile"
                       className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
                     >
                       Profile
