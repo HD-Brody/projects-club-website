@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { projectApi } from '../utils/api';
+import { PROJECT_CATEGORIES } from '../constants/categories';
 
 const SubmitProjectPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,14 +13,6 @@ const SubmitProjectPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const categories = [
-    'AI/ML',
-    'Web Development',
-    'Mobile Development',
-    'Data Science',
-    'Other',
-  ];
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -159,7 +152,7 @@ const SubmitProjectPage: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select a category</option>
-                {categories.map((cat) => (
+                {PROJECT_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>

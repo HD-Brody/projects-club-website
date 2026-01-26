@@ -40,7 +40,7 @@ async function apiRequest<T = any>(
 
     if (!response.ok) {
       return {
-        error: data.error || data.message || 'An error occurred',
+        error: data.error || data.msg || data.message || 'An error occurred',
         status: response.status,
       };
     }
@@ -114,6 +114,43 @@ export const authApi = {
 
 // Project API calls
 export const projectApi = {
+  /**
+   * Get user's own projects
+   */
+  getMyProjects: async () => {
+    return apiRequest('/api/projects/me');
+  },
+
+  /**
+   * Update a project
+   */
+  updateProject: async (projectId: number, projectData: {
+    title?: string;
+    description?: string;
+    category?: string;
+    skills?: string;
+  }) => {
+    return apiRequest(
+      `/api/projects/${projectId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(projectData),
+      }
+    );
+  },
+
+  /**
+   * Delete a project
+   */
+  deleteProject: async (projectId: number) => {
+    return apiRequest(
+      `/api/projects/${projectId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  },
+
   /**
    * Search projects with filters
    */

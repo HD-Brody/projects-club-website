@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { projectApi, authUtils } from "../utils/api";
+import { PROJECT_CATEGORIES } from "../constants/categories";
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
@@ -27,16 +28,6 @@ interface SearchResponse {
   pages: number;
   limit: number;
 }
-
-const CATEGORIES = [
-  "Web Development",
-  "Mobile App",
-  "AI/ML",
-  "Data Science",
-  "Game Development",
-  "UI/UX Design",
-  "Other"
-];
 
 export default function ProjectSearchPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -200,7 +191,7 @@ export default function ProjectSearchPage() {
                   className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   <option value="">All Categories</option>
-                  {CATEGORIES.map((cat) => (
+                  {PROJECT_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>

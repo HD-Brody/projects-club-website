@@ -158,6 +158,103 @@ def search_projects():
         'limit': limit
     }), 200
 
+@project_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_my_projects():
+    """
+    Get all projects created by the current user.
+    """
+    user_id = int(get_jwt_identity())
+    
+    projects = Project.query.filter_by(owner_id=user_id).order_by(Project.created_at.desc()).all()
+    
+    projects_data = []
+    for project in projects:
+        projects_data.append({
+            'id': project.id,
+            'title': project.title,
+            'description': project.description,
+            'skills': project.skills,
+            'category': project.category,
+            'created_at': project.created_at.isoformat() if project.created_at else None,
+            'application_count': len(project.applications)
+        })
+    
+    return jsonify(projects_data), 200
+
+@project_bp.route('/<int:project_id>', methods=['PUT'])
+@jwt_required()
+def update_project(project_id):
+    """
+    Update a project (owner-only).
+    """
+    user_id = int(get_jwt_identity())
+    
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    
+    if project.owner_id != user_id:
+        return jsonify({"msg": "Only project owner can update this project"}), 403
+    
+    data = request.get_json() or {}
+    
+    # Update fields if provided
+    if 'title' in data:
+        title = data['title'].strip()
+        if not title:
+            return jsonify({"msg": "Title cannot be empty"}), 400
+        project.title = title
+    
+    if 'description' in data:
+        description = data['description'].strip()
+        if not description:
+            return jsonify({"msg": "Description cannot be empty"}), 400
+        project.description = description
+    
+    if 'category' in data:
+        category = data['category'].strip()
+        if not category:
+            return jsonify({"msg": "Category cannot be empty"}), 400
+        project.category = category
+    
+    if 'skills' in data:
+        project.skills = data['skills'].strip() or None
+    
+    db.session.commit()
+    
+    return jsonify({
+        'id': project.id,
+        'title': project.title,
+        'description': project.description,
+        'skills': project.skills,
+        'category': project.category,
+        'created_at': project.created_at.isoformat() if project.created_at else None
+    }), 200
+
+@project_bp.route('/<int:project_id>', methods=['DELETE'])
+@jwt_required()
+def delete_project(project_id):
+    """
+    Delete a project (owner-only).
+    """
+    user_id = int(get_jwt_identity())
+    
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    
+    if project.owner_id != user_id:
+        return jsonify({"msg": "Only project owner can delete this project"}), 403
+    
+    # Delete all applications for this project first
+    Application.query.filter_by(project_id=project_id).delete()
+    
+    db.session.delete(project)
+    db.session.commit()
+    
+    return jsonify({"msg": "Project deleted successfully"}), 200
+
 @project_bp.route('/applications/me', methods=['GET'])
 @jwt_required()
 def get_my_applications():

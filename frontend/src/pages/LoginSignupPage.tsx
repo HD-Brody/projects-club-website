@@ -41,17 +41,18 @@ export default function LoginSignupPage() {
     setProfileLoading(false);
 
     if (response.data) {
-      const profile = {
-        full_name: response.data.full_name || "",
-        program: response.data.program || "",
-        year: response.data.year || "",
-        bio: response.data.bio || "",
-        skills: response.data.skills || ""
-      };
-      setProfileData(profile);
+      setProfileData((prev) => {
+        const profile = {
+          full_name: response.data.full_name || prev.full_name || "",
+          program: response.data.program || prev.program || "",
+          year: response.data.year || prev.year || "",
+          bio: response.data.bio || prev.bio || "",
+          skills: response.data.skills || prev.skills || ""
+        };
+        localStorage.setItem("profile_cache", JSON.stringify(profile));
+        return profile;
+      });
       setUserEmail(response.data.email || "");
-      // Cache for navbar avatar
-      localStorage.setItem("profile_cache", JSON.stringify(profile));
     }
   };
 
@@ -150,6 +151,8 @@ export default function LoginSignupPage() {
         authUtils.setToken(loginResponse.data.access_token);
         setIsLoggedIn(true);
         setUserEmail(email);
+        setProfileData((prev) => ({ ...prev, full_name: name }));
+        setIsEditing(true);
         loadProfile(); // Load profile after signup
       } else {
         alert("Account created! Please log in.");
