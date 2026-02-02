@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { profileApi, authUtils } from "../utils/api";
+import React, { useState, useEffect, useRef } from "react";
+import { profileApi, authUtils, API_BASE_URL } from "../utils/api";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
@@ -10,7 +10,8 @@ export default function ProfilePage() {
     skills: "",
     linkedin: "",
     discord: "",
-    instagram: ""
+    instagram: "",
+    resume_filename: ""
   });
 
   const [userEmail, setUserEmail] = useState("");
@@ -18,6 +19,9 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const skillsList = profileData.skills
     ? profileData.skills
@@ -49,7 +53,8 @@ export default function ProfilePage() {
           skills: response.data.skills || prev.skills || "",
           linkedin: response.data.linkedin || prev.linkedin || "",
           discord: response.data.discord || prev.discord || "",
-          instagram: response.data.instagram || prev.instagram || ""
+          instagram: response.data.instagram || prev.instagram || "",
+          resume_filename: response.data.resume_filename || ""
         };
         localStorage.setItem("profile_cache", JSON.stringify(profile));
         return profile;
@@ -90,6 +95,101 @@ export default function ProfilePage() {
     localStorage.removeItem("profile_cache");
     alert("Successfully logged out!");
     window.location.hash = "#/login";
+  };
+
+  // Resume upload handlers
+  const handleResumeUpload = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Only PDF files are allowed');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setResumeUploading(true);
+    const response = await profileApi.uploadResume(file);
+    setResumeUploading(false);
+
+    if (response.error) {
+      alert(`Error: ${response.error}`);
+    } else {
+      setProfileData(prev => ({ ...prev, resume_filename: response.data.resume_filename }));
+      alert('Resume uploaded successfully!');
+    }
+  };
+
+  const handleResumeDelete = async () => {
+    if (!confirm('Are you sure you want to delete your resume?')) return;
+
+    const response = await profileApi.deleteResume();
+    if (response.error) {
+      alert(`Error: ${response.error}`);
+    } else {
+      setProfileData(prev => ({ ...prev, resume_filename: '' }));
+      alert('Resume deleted successfully!');
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleResumeUpload(file);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleResumeUpload(file);
+  };
+
+  const fetchResumeBlob = async () => {
+    const token = authUtils.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/profile/resume`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch resume');
+    return response.blob();
+  };
+
+  const openResume = async () => {
+    try {
+      const blob = await fetchResumeBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      alert('Failed to open resume');
+    }
+  };
+
+  const downloadResume = async () => {
+    try {
+      const blob = await fetchResumeBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = profileData.resume_filename || 'resume.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Failed to download resume');
+    }
   };
 
   return (
@@ -219,6 +319,48 @@ export default function ProfilePage() {
                           Instagram
                         </a>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Resume Section */}
+                {profileData.resume_filename && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span>Resume</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white rounded-xl px-5 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-slate-100">
+                      <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zm-3 9h6v2h-6v-2zm0 4h6v2h-6v-2zm0-8h2v2h-2V9z"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{profileData.resume_filename}</p>
+                        <p className="text-xs text-slate-400">PDF Document</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={openResume}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition text-sm font-medium"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View
+                        </button>
+                        <button
+                          onClick={downloadResume}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition text-sm font-medium"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Download
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -379,6 +521,75 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Resume Upload */}
+                    <div className="pt-2">
+                      <label className="block text-sm text-slate-700 mb-3">Resume <span className="text-slate-400">(optional)</span></label>
+                      
+                      {profileData.resume_filename ? (
+                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zm-3 9h6v2h-6v-2zm0 4h6v2h-6v-2zm0-8h2v2h-2V9z"/>
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-800 truncate">{profileData.resume_filename}</p>
+                            <p className="text-xs text-slate-400">PDF Document</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition text-sm"
+                          >
+                            Replace
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleResumeDelete}
+                            className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`relative p-6 border-2 border-dashed rounded-xl cursor-pointer transition ${
+                            isDragging
+                              ? 'border-sky-400 bg-sky-50'
+                              : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-2 text-center">
+                            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                              isDragging ? 'bg-sky-100' : 'bg-slate-100'
+                            }`}>
+                              <svg className={`w-6 h-6 ${isDragging ? 'text-sky-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-700">
+                                {resumeUploading ? 'Uploading...' : 'Drop your resume here or click to browse'}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1">PDF only, max 5MB</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
                     </div>
 
                     <div className="flex gap-3 pt-2">

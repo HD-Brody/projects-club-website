@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from .. import db
 from app.models import User, Profile
+import io
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -17,6 +18,7 @@ def serialize_profile(user: User, profile: Profile):
         "linkedin": (profile.linkedin if profile else None),
         "discord": (profile.discord if profile else None),
         "instagram": (profile.instagram if profile else None),
+        "resume_filename": (profile.resume_filename if profile else None),
     }
 
 @profile_bp.route('/', methods=['GET'])
@@ -77,3 +79,86 @@ def update_profile():
     db.session.commit()
 
     return jsonify(serialize_profile(user, profile)), 200
+
+
+@profile_bp.route('/resume', methods=['POST'])
+@jwt_required()
+def upload_resume():
+    """Upload a resume PDF file"""
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if 'resume' not in request.files:
+        return jsonify({"error": "No resume file provided"}), 400
+
+    file = request.files['resume']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    # Check file extension
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({"error": "Only PDF files are allowed"}), 400
+
+    # Read file data
+    file_data = file.read()
+    
+    # Check file size (max 5MB)
+    if len(file_data) > 5 * 1024 * 1024:
+        return jsonify({"error": "File size must be less than 5MB"}), 400
+
+    profile = user.profile
+    if not profile:
+        profile = Profile(user_id=user.id)
+        db.session.add(profile)
+
+    profile.resume_filename = file.filename
+    profile.resume_data = file_data
+    db.session.commit()
+
+    return jsonify({
+        "message": "Resume uploaded successfully",
+        "resume_filename": profile.resume_filename
+    }), 200
+
+
+@profile_bp.route('/resume', methods=['GET'])
+@jwt_required()
+def download_resume():
+    """Download the user's resume"""
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    if not profile or not profile.resume_data:
+        return jsonify({"error": "No resume uploaded"}), 404
+
+    return send_file(
+        io.BytesIO(profile.resume_data),
+        mimetype='application/pdf',
+        as_attachment=False,
+        download_name=profile.resume_filename
+    )
+
+
+@profile_bp.route('/resume', methods=['DELETE'])
+@jwt_required()
+def delete_resume():
+    """Delete the user's resume"""
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    if not profile or not profile.resume_data:
+        return jsonify({"error": "No resume to delete"}), 404
+
+    profile.resume_filename = None
+    profile.resume_data = None
+    db.session.commit()
+
+    return jsonify({"message": "Resume deleted successfully"}), 200

@@ -27,6 +27,10 @@ class Profile(db.Model):
     linkedin = db.Column(db.String(255))
     discord = db.Column(db.String(255))
     instagram = db.Column(db.String(255))
+    
+    # Resume (optional)
+    resume_filename = db.Column(db.String(255))  # Original filename
+    resume_data = db.Column(db.LargeBinary)      # PDF binary data
 
     # Relationship back
     user = db.relationship('User', back_populates='profile')

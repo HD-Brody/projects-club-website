@@ -1,6 +1,6 @@
 // API configuration and utility functions
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
 interface ApiResponse<T = any> {
   data?: T;
@@ -259,6 +259,62 @@ export const profileApi = {
         body: JSON.stringify(profileData),
       }
     );
+  },
+
+  /**
+   * Upload resume PDF
+   */
+  uploadResume: async (file: File) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile/resume`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return {
+          error: data.error || 'Failed to upload resume',
+          status: response.status,
+        };
+      }
+
+      return {
+        data,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+        status: 0,
+      };
+    }
+  },
+
+  /**
+   * Get resume download URL
+   */
+  getResumeUrl: () => {
+    const token = localStorage.getItem('access_token');
+    return `${API_BASE_URL}/api/profile/resume?token=${token}`;
+  },
+
+  /**
+   * Delete resume
+   */
+  deleteResume: async () => {
+    return apiRequest('/api/profile/resume', {
+      method: 'DELETE',
+    });
   },
 };
 
