@@ -14,6 +14,9 @@ def serialize_profile(user: User, profile: Profile):
         "year": (profile.year if profile else None),
         "bio": (profile.bio if profile else None),
         "skills": (profile.skills if profile else None),
+        "linkedin": (profile.linkedin if profile else None),
+        "discord": (profile.discord if profile else None),
+        "instagram": (profile.instagram if profile else None),
     }
 
 @profile_bp.route('/', methods=['GET'])
@@ -43,6 +46,11 @@ def update_profile():
     full_name = data.get('full_name')
     program = data.get('program')
     year = data.get('year')
+    
+    # Social media fields (optional)
+    linkedin = data.get('linkedin')
+    discord = data.get('discord')
+    instagram = data.get('instagram')
 
     profile = user.profile
     if not profile:
@@ -59,6 +67,12 @@ def update_profile():
         profile.bio = bio
     if skills is not None:
         profile.skills = skills
+    if linkedin is not None:
+        profile.linkedin = linkedin
+    if discord is not None:
+        profile.discord = discord
+    if instagram is not None:
+        profile.instagram = instagram
 
     db.session.commit()
 

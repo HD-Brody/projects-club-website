@@ -48,12 +48,11 @@ function Header({ onNavigate }: HeaderProps) {
     <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/85 bg-white/95 border-b border-slate-200 will-change-transform">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="h-10 w-10 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold text-sm tracking-tight"
-            aria-label="Projects Club logo"
-          >
-            PC
-          </div>
+          <img
+            src="/UTPC_logo.png"
+            alt="Projects Club logo"
+            className="h-10 w-10 rounded-full object-cover"
+          />
           <div className="leading-tight">
             <p className="font-semibold text-slate-900">UofT Projects Club</p>
             <p className="text-xs text-slate-500">Bridge business × tech</p>

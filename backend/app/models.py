@@ -22,6 +22,11 @@ class Profile(db.Model):
     year = db.Column(db.String(16))
     bio = db.Column(db.Text)               # new
     skills = db.Column(db.Text)            # new, could store comma-separated list or JSON
+    
+    # Social media links (all optional)
+    linkedin = db.Column(db.String(255))
+    discord = db.Column(db.String(255))
+    instagram = db.Column(db.String(255))
 
     # Relationship back
     user = db.relationship('User', back_populates='profile')
