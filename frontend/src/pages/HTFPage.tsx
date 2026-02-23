@@ -125,23 +125,31 @@ export default function HTFPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Header />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <a
+          href="#"
+          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 mb-8 text-sm transition"
+        >
+          ← Home
+        </a>
+
         {/* Page Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Hack the Future 🚀
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Hack the Future
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Check out the amazing projects built at our hackathon! Watch demo videos and get inspired by fellow club members.
+          <p className="text-sm text-slate-500 max-w-3xl">
+            Check out the amazing projects built at our hackathon. Watch demo videos and get inspired by fellow club members.
           </p>
         </div>
 
         {/* Submit Button (if authenticated) */}
         {isAuthenticated && !showForm && (
-          <div className="text-center mb-8">
+          <div className="mb-8">
             <button
               onClick={() => setShowForm(true)}
-              className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:opacity-90 transition shadow-lg shadow-purple-200"
+              className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
             >
               + Submit Your Project
             </button>
@@ -150,13 +158,13 @@ export default function HTFPage() {
 
         {/* Login prompt for unauthenticated users */}
         {!isAuthenticated && (
-          <div className="text-center mb-8 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <p className="text-slate-600 mb-3">
+          <div className="mb-8 bg-white rounded-2xl ring-1 ring-slate-200 p-6">
+            <p className="text-sm text-slate-600 mb-3">
               Built a project at Hack the Future?
             </p>
             <a
               href="#/login"
-              className="px-5 py-2.5 rounded-lg bg-slate-900 text-white hover:opacity-90 transition inline-block"
+              className="px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm font-semibold transition inline-block"
             >
               Login to Submit Your Project
             </a>
@@ -165,9 +173,9 @@ export default function HTFPage() {
 
         {/* Submission Form */}
         {showForm && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 mb-8 max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                 Submit Your Hackathon Project
               </h2>
               <button
@@ -180,7 +188,7 @@ export default function HTFPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   Project Name *
                 </label>
                 <input
@@ -188,13 +196,13 @@ export default function HTFPage() {
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="e.g., AI Study Buddy"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   YouTube URL *
                 </label>
                 <input
@@ -202,16 +210,16 @@ export default function HTFPage() {
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                   required
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   Link to your demo video on YouTube
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   Description (optional)
                 </label>
                 <textarea
@@ -219,7 +227,7 @@ export default function HTFPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief description of your project..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm resize-none"
                 />
               </div>
 
@@ -238,7 +246,7 @@ export default function HTFPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:opacity-90 transition disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition disabled:opacity-50"
               >
                 {submitting ? "Submitting..." : "Submit Project"}
               </button>
@@ -249,7 +257,7 @@ export default function HTFPage() {
         {/* Loading state */}
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin"></div>
             <p className="mt-3 text-slate-500">Loading submissions...</p>
           </div>
         )}
@@ -269,12 +277,16 @@ export default function HTFPage() {
 
         {/* Empty state */}
         {!loading && !error && submissions.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
-            <div className="text-6xl mb-4">🎬</div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+          <div className="text-center py-12 bg-white rounded-2xl ring-1 ring-slate-200">
+            <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">
               No submissions yet
             </h3>
-            <p className="text-slate-600">
+            <p className="text-sm text-slate-500">
               Be the first to share your hackathon project!
             </p>
           </div>
@@ -292,7 +304,7 @@ export default function HTFPage() {
               return (
                 <div
                   key={submission.id}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition group"
+                  className="bg-white rounded-2xl ring-1 ring-slate-200 overflow-hidden hover:shadow-md transition group"
                 >
                   {/* Video Thumbnail */}
                   <a

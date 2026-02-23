@@ -137,13 +137,21 @@ export default function ProjectSearchPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Header />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <a
+          href="#"
+          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 mb-8 text-sm transition"
+        >
+          ← Home
+        </a>
+
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Search Projects
           </h1>
-          <p className="text-lg text-slate-600">
+          <p className="text-sm text-slate-500">
             Find projects that match your interests and skills
           </p>
         </div>
@@ -153,7 +161,7 @@ export default function ProjectSearchPage() {
           <form className="space-y-4">
             {/* Search Bar */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm text-slate-700 mb-1.5">
                 Search by keyword
               </label>
               <input
@@ -161,14 +169,14 @@ export default function ProjectSearchPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search project titles and descriptions..."
-                className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
               />
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
               {/* Skills Filter */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   Skills (comma-separated)
                 </label>
                 <input
@@ -176,19 +184,19 @@ export default function ProjectSearchPage() {
                   value={selectedSkills}
                   onChange={(e) => setSelectedSkills(e.target.value)}
                   placeholder="e.g., Python, React, AI"
-                  className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                 />
               </div>
 
               {/* Category Filter */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   Category
                 </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                 >
                   <option value="">All Categories</option>
                   {PROJECT_CATEGORIES.map((cat) => (
@@ -201,13 +209,13 @@ export default function ProjectSearchPage() {
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm text-slate-700 mb-1.5">
                   Sort by
                 </label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl ring-1 ring-slate-300 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                 >
                   <option value="newest">Newest First</option>
                   <option value="az">Alphabetical (A-Z)</option>
@@ -227,7 +235,7 @@ export default function ProjectSearchPage() {
                   setSortBy("newest");
                   setCurrentPage(1);
                 }}
-                className="px-6 py-2 rounded-xl ring-1 ring-slate-300 text-slate-700 hover:bg-slate-50 font-medium"
+                className="px-6 py-2 rounded-xl ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium"
               >
                 Clear Filters
               </button>
@@ -252,7 +260,7 @@ export default function ProjectSearchPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-600 border-r-transparent"></div>
             <p className="mt-4 text-slate-600">Loading projects...</p>
           </div>
         )}
@@ -293,7 +301,7 @@ export default function ProjectSearchPage() {
                         </p>
                       </div>
                       {project.category && (
-                        <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        <span className="px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full ring-1 ring-slate-200">
                           {project.category}
                         </span>
                       )}
@@ -322,7 +330,7 @@ export default function ProjectSearchPage() {
                       </span>
                       <button
                         onClick={() => handleApplyClick(project)}
-                        className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium"
+                        className="px-4 py-2 text-sm rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-medium transition"
                       >
                         Apply Now
                       </button>
@@ -338,19 +346,19 @@ export default function ProjectSearchPage() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-lg bg-white ring-1 ring-slate-300 text-slate-700 hover:bg-slate-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                   Previous
                 </button>
 
-                <span className="text-slate-600">
+                <span className="text-sm text-slate-600">
                   Page {currentPage} of {totalPages}
                 </span>
 
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-lg bg-white ring-1 ring-slate-300 text-slate-700 hover:bg-slate-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                   Next
                 </button>
@@ -362,13 +370,12 @@ export default function ProjectSearchPage() {
 
       {/* Apply Modal */}
       {showApplyModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-1">
                 Apply for "{selectedProject.title}"
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm text-slate-500 mb-6">
                 Let the project owner know what role you're interested in.
               </p>
 
@@ -386,7 +393,7 @@ export default function ProjectSearchPage() {
 
               <form onSubmit={handleApplySubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="role" className="block text-sm text-slate-700 mb-1.5">
                     Role *
                   </label>
                   <input
@@ -395,28 +402,27 @@ export default function ProjectSearchPage() {
                     value={applyRole}
                     onChange={(e) => setApplyRole(e.target.value)}
                     placeholder="e.g., Frontend Developer, Designer, Project Manager"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowApplyModal(false)}
-                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
+                    className="flex-1 px-4 py-2.5 rounded-xl ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={applyLoading}
-                    className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm font-semibold disabled:opacity-50 transition"
                   >
                     {applyLoading ? "Submitting..." : "Submit Application"}
                   </button>
                 </div>
               </form>
-            </div>
           </div>
         </div>
       )}

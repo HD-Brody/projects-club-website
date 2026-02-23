@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { projectApi } from '../utils/api';
 
 interface Application {
@@ -60,20 +62,22 @@ const ApplicationDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => window.history.back()}
-          className="mb-6 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <a
+          href="#"
+          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 mb-8 text-sm transition"
         >
-          ← Back
-        </button>
+          ← Home
+        </a>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
-          <p className="text-gray-600">Track your applications and their status</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Applications</h1>
+          <p className="text-sm text-slate-500">Track your applications and their status</p>
         </div>
 
         {/* Filter Tabs */}
@@ -82,10 +86,10 @@ const ApplicationDashboardPage: React.FC = () => {
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 statusFilter === filter
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
               {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -98,25 +102,26 @@ const ApplicationDashboardPage: React.FC = () => {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Loading applications...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-600 border-r-transparent"></div>
+            <p className="mt-4 text-sm text-slate-500">Loading applications...</p>
           </div>
         ) : filteredApplications.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <p className="text-gray-600 mb-4">
+          <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-8 text-center">
+            <p className="text-sm text-slate-500 mb-4">
               {statusFilter === 'all'
                 ? "You haven't applied to any projects yet."
                 : `No ${statusFilter} applications.`}
             </p>
             <a
               href="#/projects"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="inline-block px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
             >
               Browse Projects
             </a>
@@ -124,18 +129,18 @@ const ApplicationDashboardPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filteredApplications.map((app) => (
-              <div key={app.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition">
+              <div key={app.id} className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 hover:shadow-md transition">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-slate-900">
                       {app.project?.title || 'Unknown Project'}
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      <a href={`#/profile/${app.project?.owner?.id}`} className="hover:text-gray-900 hover:underline transition">{app.project?.owner?.name || 'Unknown'}</a> \u2022 {app.project?.category || 'N/A'}
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      <a href={`#/profile/${app.project?.owner?.id}`} className="text-slate-700 hover:text-slate-900 hover:underline transition">{app.project?.owner?.name || 'Unknown'}</a> · {app.project?.category || 'N/A'}
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
                       app.status
                     )}`}
                   >
@@ -144,42 +149,38 @@ const ApplicationDashboardPage: React.FC = () => {
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Applied Role:</strong> {app.role}
+                  <p className="text-sm text-slate-600">
+                    <span className="font-medium text-slate-700">Applied Role:</span> {app.role}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Applied on:</strong> {new Date(app.created_at).toLocaleDateString()}
+                  <p className="text-sm text-slate-600">
+                    <span className="font-medium text-slate-700">Applied on:</span> {new Date(app.created_at).toLocaleDateString()}
                   </p>
                 </div>
 
                 {app.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded text-sm">
-                      Awaiting review...
-                    </span>
-                  </div>
+                  <span className="inline-block bg-slate-50 ring-1 ring-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs">
+                    Awaiting review...
+                  </span>
                 )}
 
                 {app.status === 'accepted' && (
-                  <div className="flex gap-2">
-                    <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded text-sm">
-                      ✓ Congratulations! You've been accepted.
-                    </span>
-                  </div>
+                  <span className="inline-block bg-green-50 ring-1 ring-green-200 text-green-700 px-3 py-1.5 rounded-lg text-xs">
+                    Congratulations! You've been accepted.
+                  </span>
                 )}
 
                 {app.status === 'rejected' && (
-                  <div className="flex gap-2">
-                    <span className="inline-block bg-red-50 text-red-700 px-3 py-1 rounded text-sm">
-                      Unfortunately, you were not selected.
-                    </span>
-                  </div>
+                  <span className="inline-block bg-red-50 ring-1 ring-red-200 text-red-700 px-3 py-1.5 rounded-lg text-xs">
+                    Unfortunately, you were not selected.
+                  </span>
                 )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 };
