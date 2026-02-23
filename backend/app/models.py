@@ -65,7 +65,19 @@ class Application(db.Model):
     # Relationships
     project = db.relationship('Project', back_populates='applications')
     applicant = db.relationship('User', back_populates='applications')
-    applicant = db.relationship('User', back_populates='applications')
+
+
+class PasswordResetToken(db.Model):
+    """Database-backed password reset tokens (replaces in-memory dict)"""
+    __tablename__ = 'password_reset_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User')
 
 
 class HTFSubmission(db.Model):

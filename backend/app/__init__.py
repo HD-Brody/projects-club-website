@@ -3,11 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 import os
 
 db = SQLAlchemy()
 jwt = JWTManager()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 def create_app(config_object=None):
     load_dotenv()  # loads .env in dev
@@ -16,9 +19,9 @@ def create_app(config_object=None):
     if config_object:
         app.config.from_object(config_object)
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-        app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or 'dev-secret'
-        app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY') or 'dev-jwt-secret'
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+        app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+        app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', os.environ['SECRET_KEY'])
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -49,8 +52,11 @@ def create_app(config_object=None):
     def missing_token_callback(error):
         return {"error": "Authorization required", "msg": "Missing or invalid Authorization header"}, 401
 
-    # Enable CORS for React frontend (Vite dev server runs on 5173)
-    CORS(app, origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
+    limiter.init_app(app)
+
+    # Enable CORS — read allowed origins from env, fall back to localhost for dev
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173').split(',')
+    CORS(app, origins=[o.strip() for o in cors_origins], supports_credentials=True)
 
     # Blueprints
     from app.routes.auth_routes import auth_bp

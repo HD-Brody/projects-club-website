@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import inspect
@@ -16,4 +17,5 @@ from app.models import User, Profile, Project, Application
 app = create_app(Config)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() in ('true', '1', 'yes')
+    app.run(host='0.0.0.0', port=5000, debug=debug)

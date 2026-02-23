@@ -6,3 +6,4 @@ Flask-JWT-Extended
 Flask-CORS
 python-dotenv
 Flask-Migrate
+Flask-Limiter
