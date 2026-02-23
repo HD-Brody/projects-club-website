@@ -66,6 +66,7 @@ function Header({ onNavigate }: HeaderProps) {
             <a href="#gallery" className="transition hover:text-slate-900">Photos</a>
             <a href="#sponsors" className="transition hover:text-slate-900">Sponsors</a>
             <a href="#/projects" className="transition hover:text-slate-900">Projects</a>
+            <a href="#/htf" className="transition hover:text-slate-900">HTF</a>
           </div>
 
           <div className="flex items-center gap-3.5 pl-5">

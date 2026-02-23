@@ -8,6 +8,7 @@ import ProjectSearchPage from "./pages/ProjectSearchPage";
 import SubmitProjectPage from "./pages/SubmitProjectPage";
 import ApplicationDashboardPage from "./pages/ApplicationDashboardPage";
 import ProjectOwnerPanel from "./pages/ProjectOwnerPanel";
+import HTFPage from "./pages/HTFPage";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "");
@@ -50,6 +51,10 @@ export default function App() {
 
   if (route === '#/manage-projects') {
     return <ProjectOwnerPanel />;
+  }
+
+  if (route === '#/htf') {
+    return <HTFPage />;
   }
 
   return <HomePage />;

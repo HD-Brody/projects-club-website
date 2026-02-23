@@ -39,6 +39,14 @@ async function apiRequest<T = any>(
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      // Handle 401 - clear stale token and redirect to login
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        // Only redirect if we're not already on login page
+        if (!window.location.hash.includes('/login')) {
+          window.location.hash = '#/login';
+        }
+      }
       return {
         error: data.error || data.msg || data.message || 'An error occurred',
         status: response.status,
@@ -346,5 +354,50 @@ export const authUtils = {
    */
   isAuthenticated: () => {
     return !!localStorage.getItem('access_token');
+  },
+};
+
+// HTF (Hack the Future) API calls
+export const htfApi = {
+  /**
+   * Get all HTF submissions (public)
+   */
+  getSubmissions: async () => {
+    return apiRequest<{
+      submissions: Array<{
+        id: number;
+        project_name: string;
+        youtube_url: string;
+        description: string | null;
+        created_at: string;
+        submitter: {
+          id: number;
+          name: string;
+        };
+      }>;
+    }>('/api/htf/');
+  },
+
+  /**
+   * Create a new HTF submission (requires auth)
+   */
+  createSubmission: async (data: {
+    project_name: string;
+    youtube_url: string;
+    description?: string;
+  }) => {
+    return apiRequest('/api/htf/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Delete an HTF submission (owner only)
+   */
+  deleteSubmission: async (submissionId: number) => {
+    return apiRequest(`/api/htf/${submissionId}`, {
+      method: 'DELETE',
+    });
   },
 };

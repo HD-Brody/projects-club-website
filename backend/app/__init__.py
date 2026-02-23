@@ -36,16 +36,31 @@ def create_app(config_object=None):
         from app.models import User
         return User.query.get(int(identity))
 
+    # JWT error handlers for better debugging
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return {"error": "Token has expired", "msg": "Please log in again"}, 401
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return {"error": "Invalid token", "msg": str(error)}, 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return {"error": "Authorization required", "msg": "Missing or invalid Authorization header"}, 401
+
     # Enable CORS for React frontend (Vite dev server runs on 5173)
-    CORS(app, origins=["http://localhost:3000", "http://localhost:5173"], supports_credentials=True)
+    CORS(app, origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
 
     # Blueprints
     from app.routes.auth_routes import auth_bp
     from app.routes.profile_routes import profile_bp
     from app.routes.project_routes import project_bp
+    from app.routes.htf_routes import htf_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp, url_prefix='/api/profile')
     app.register_blueprint(project_bp, url_prefix='/api/projects')
+    app.register_blueprint(htf_bp, url_prefix='/api/htf')
 
     # Health check route
     @app.route("/health")
