@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { profileApi, authUtils, API_BASE_URL } from "../utils/api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProjectsSection from "../components/ProjectsSection";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
@@ -376,7 +377,7 @@ export default function ProfilePage() {
             <aside className="space-y-5">
               <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
                 {/* Avatar */}
-                <div className="h-20 w-20 rounded-2xl bg-slate-900 text-white font-bold grid place-items-center text-2xl uppercase mx-auto">
+                <div className="h-28 w-28 rounded-full bg-slate-900 text-white font-bold grid place-items-center text-3xl uppercase mx-auto ring-4 ring-slate-100">
                   {initials || "U"}
                 </div>
 
@@ -452,9 +453,9 @@ export default function ProfilePage() {
             </aside>
 
             {/* ── Main Content ── */}
-            <main className="space-y-6 min-w-0">
+            <main className="flex flex-col gap-6 min-w-0">
               {/* About */}
-              <section className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
+              <section className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 flex-1">
                 <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">About</h2>
                 {profileData.bio?.trim() ? (
                   <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{profileData.bio.trim()}</p>
@@ -478,6 +479,9 @@ export default function ProfilePage() {
                   <p className="text-sm text-slate-400 italic">No skills listed yet.</p>
                 )}
               </section>
+
+              {/* Projects */}
+              <ProjectsSection />
 
               {/* Resume */}
               {profileData.resume_filename && (
