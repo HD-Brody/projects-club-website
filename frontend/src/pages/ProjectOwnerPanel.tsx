@@ -294,9 +294,9 @@ const ProjectOwnerPanel: React.FC = () => {
                           >
                             <div className="flex justify-between items-start mb-3">
                               <div>
-                                <p className="font-medium text-gray-900">
+                                <a href={`#/profile/${app.user_id}`} className="font-medium text-gray-900 hover:text-blue-700 hover:underline transition">
                                   {app.applicant?.name || 'Unknown'}
-                                </p>
+                                </a>
                                 <p className="text-sm text-gray-600">
                                   {app.applicant?.email || 'No email'}
                                 </p>

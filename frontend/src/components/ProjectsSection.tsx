@@ -11,7 +11,11 @@ interface ProjectData {
   role: "Owner" | "Member";
 }
 
-export default function ProjectsSection() {
+interface ProjectsSectionProps {
+  userId?: number;
+}
+
+export default function ProjectsSection({ userId }: ProjectsSectionProps) {
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,11 +26,27 @@ export default function ProjectsSection() {
       setError(null);
 
       try {
-        // Fetch owned projects and applications in parallel
-        const [ownedRes, appsRes] = await Promise.all([
-          projectApi.getMyProjects(),
-          projectApi.getMyApplications(),
-        ]);
+        if (userId !== undefined) {
+          // Public view: fetch user's projects via public endpoint
+          const res = await projectApi.getUserProjects(userId);
+          if (res.data && Array.isArray(res.data)) {
+            setProjects(
+              res.data.map((p: any) => ({
+                id: p.id,
+                title: p.title,
+                description: p.description,
+                skills: p.skills,
+                category: p.category,
+                role: p.role || "Owner",
+              }))
+            );
+          }
+        } else {
+          // Own profile: fetch owned + member projects
+          const [ownedRes, appsRes] = await Promise.all([
+            projectApi.getMyProjects(),
+            projectApi.getMyApplications(),
+          ]);
 
         const combined: ProjectData[] = [];
 
@@ -66,6 +86,7 @@ export default function ProjectsSection() {
         }
 
         setProjects(combined);
+        }
       } catch {
         setError("Failed to load projects.");
       } finally {
@@ -74,7 +95,7 @@ export default function ProjectsSection() {
     };
 
     fetchProjects();
-  }, []);
+  }, [userId]);
 
   return (
     <section className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">

@@ -182,6 +182,52 @@ def get_my_projects():
     
     return jsonify(projects_data), 200
 
+
+@project_bp.route('/user/<int:user_id>', methods=['GET'])
+def get_user_projects(user_id):
+    """
+    Get all projects owned by a specific user (public).
+    Also includes projects where the user is an accepted member.
+    """
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    # Projects owned by the user
+    owned = Project.query.filter_by(owner_id=user_id).order_by(Project.created_at.desc()).all()
+    projects_data = []
+    seen_ids = set()
+    for project in owned:
+        seen_ids.add(project.id)
+        projects_data.append({
+            'id': project.id,
+            'title': project.title,
+            'description': project.description,
+            'skills': project.skills,
+            'category': project.category,
+            'created_at': project.created_at.isoformat() if project.created_at else None,
+            'role': 'Owner'
+        })
+
+    # Projects where user is an accepted member
+    accepted_apps = Application.query.filter_by(user_id=user_id, status='accepted').all()
+    for app in accepted_apps:
+        if app.project_id not in seen_ids:
+            project = Project.query.get(app.project_id)
+            if project:
+                seen_ids.add(project.id)
+                projects_data.append({
+                    'id': project.id,
+                    'title': project.title,
+                    'description': project.description,
+                    'skills': project.skills,
+                    'category': project.category,
+                    'created_at': project.created_at.isoformat() if project.created_at else None,
+                    'role': 'Member'
+                })
+
+    return jsonify(projects_data), 200
+
 @project_bp.route('/<int:project_id>', methods=['PUT'])
 @jwt_required()
 def update_project(project_id):

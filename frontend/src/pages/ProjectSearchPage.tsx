@@ -288,7 +288,7 @@ export default function ProjectSearchPage() {
                           {project.title}
                         </h3>
                         <p className="text-sm text-slate-500 mt-1">
-                          By {project.owner.name || project.owner.email} ·{" "}
+                          By <a href={`#/profile/${project.owner.id}`} className="font-medium text-slate-700 hover:text-slate-900 hover:underline transition">{project.owner.name || project.owner.email}</a> ·{" "}
                           {new Date(project.created_at).toLocaleDateString()}
                         </p>
                       </div>

@@ -131,7 +131,7 @@ const ApplicationDashboardPage: React.FC = () => {
                       {app.project?.title || 'Unknown Project'}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {app.project?.owner?.name || 'Unknown'} • {app.project?.category || 'N/A'}
+                      <a href={`#/profile/${app.project?.owner?.id}`} className="hover:text-gray-900 hover:underline transition">{app.project?.owner?.name || 'Unknown'}</a> \u2022 {app.project?.category || 'N/A'}
                     </p>
                   </div>
                   <span

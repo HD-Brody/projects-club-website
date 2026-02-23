@@ -33,6 +33,13 @@ export default function App() {
     return <ProfilePage />;
   }
 
+  if (route.startsWith('#/profile/')) {
+    const userId = parseInt(route.replace('#/profile/', ''), 10);
+    if (!isNaN(userId)) {
+      return <ProfilePage viewUserId={userId} />;
+    }
+  }
+
   if (route.startsWith('#/reset-password')) {
     return <ResetPasswordPage />;
   }

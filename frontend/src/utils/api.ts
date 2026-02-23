@@ -130,6 +130,13 @@ export const projectApi = {
   },
 
   /**
+   * Get projects for a specific user (public)
+   */
+  getUserProjects: async (userId: number) => {
+    return apiRequest(`/api/projects/user/${userId}`);
+  },
+
+  /**
    * Update a project
    */
   updateProject: async (projectId: number, projectData: {
@@ -248,6 +255,13 @@ export const profileApi = {
    */
   getProfile: async () => {
     return apiRequest('/api/profile/');
+  },
+
+  /**
+   * Get another user's public profile (no auth required)
+   */
+  getPublicProfile: async (userId: number) => {
+    return apiRequest(`/api/profile/${userId}`);
   },
 
   /**

@@ -338,9 +338,9 @@ export default function HTFPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500">
                         by{" "}
-                        <span className="font-medium text-slate-700">
+                        <a href={`#/profile/${submission.submitter.id}`} className="font-medium text-slate-700 hover:text-slate-900 hover:underline transition">
                           {submission.submitter.name}
-                        </span>
+                        </a>
                       </span>
 
                       {currentUserId === submission.submitter.id && (

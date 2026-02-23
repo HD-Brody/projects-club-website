@@ -32,6 +32,29 @@ def get_profile():
     profile = user.profile
     return jsonify(serialize_profile(user, profile)), 200
 
+
+@profile_bp.route('/<int:user_id>', methods=['GET'])
+def get_public_profile(user_id):
+    """Get a public view of another user's profile (no auth required)."""
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    # Return a subset — omit resume and email for privacy
+    return jsonify({
+        "user_id": user.id,
+        "full_name": (profile.full_name if profile else None),
+        "program": (profile.program if profile else None),
+        "year": (profile.year if profile else None),
+        "bio": (profile.bio if profile else None),
+        "skills": (profile.skills if profile else None),
+        "linkedin": (profile.linkedin if profile else None),
+        "discord": (profile.discord if profile else None),
+        "instagram": (profile.instagram if profile else None),
+        "has_resume": bool(profile and profile.resume_filename),
+    }), 200
+
 @profile_bp.route('/', methods=['PUT'])
 @jwt_required()
 def update_profile():

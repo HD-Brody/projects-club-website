@@ -4,7 +4,12 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProjectsSection from "../components/ProjectsSection";
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+  viewUserId?: number;
+}
+
+export default function ProfilePage({ viewUserId }: ProfilePageProps) {
+  const isPublicView = viewUserId !== undefined;
   const [profileData, setProfileData] = useState({
     full_name: "",
     program: "",
@@ -66,16 +71,42 @@ export default function ProfilePage() {
     }
   };
 
+  // Load a public profile by user ID
+  const loadPublicProfile = async (userId: number) => {
+    setProfileLoading(true);
+    const response = await profileApi.getPublicProfile(userId);
+    setProfileLoading(false);
+
+    if (response.error) {
+      setError(response.error);
+    } else if (response.data) {
+      setProfileData({
+        full_name: response.data.full_name || "",
+        program: response.data.program || "",
+        year: response.data.year || "",
+        bio: response.data.bio || "",
+        skills: response.data.skills || "",
+        linkedin: response.data.linkedin || "",
+        discord: response.data.discord || "",
+        instagram: response.data.instagram || "",
+        resume_filename: ""
+      });
+    }
+  };
+
   // Check if user is already logged in on mount
   useEffect(() => {
-    const token = authUtils.getToken();
-    if (token) {
-      loadProfile();
+    if (isPublicView) {
+      loadPublicProfile(viewUserId);
     } else {
-      // Redirect to login if not authenticated
-      window.location.hash = "#/login";
+      const token = authUtils.getToken();
+      if (token) {
+        loadProfile();
+      } else {
+        window.location.hash = "#/login";
+      }
     }
-  }, []);
+  }, [viewUserId]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,7 +241,9 @@ export default function ProfilePage() {
 
         {profileLoading ? (
           <div className="py-20 text-center text-slate-400">Loading profile...</div>
-        ) : isEditing ? (
+        ) : error && isPublicView ? (
+          <div className="py-20 text-center text-slate-400">{error}</div>
+        ) : isEditing && !isPublicView ? (
           /* ────────────────── EDIT MODE ────────────────── */
           <div className="max-w-2xl mx-auto">
             <div className="mb-6">
@@ -386,7 +419,7 @@ export default function ProfilePage() {
                   <h1 className="text-lg font-bold text-slate-900 leading-snug">
                     {profileData.full_name || <span className="text-slate-400 font-normal text-base">No name set</span>}
                   </h1>
-                  <p className="text-sm text-slate-500 mt-0.5">{userEmail}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">{!isPublicView && userEmail}</p>
                   {(profileData.program || profileData.year) && (
                     <p className="text-xs text-slate-500 mt-2 bg-slate-50 rounded-lg py-1.5 px-3 inline-block">
                       {profileData.program && profileData.year
@@ -396,7 +429,8 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Actions */}
+                {/* Actions — own profile only */}
+                {!isPublicView && (
                 <div className="mt-5 pt-5 border-t border-slate-100 flex flex-col gap-2">
                   <button
                     type="button"
@@ -412,6 +446,7 @@ export default function ProfilePage() {
                     Log out
                   </button>
                 </div>
+                )}
               </div>
 
               {/* Socials Card */}
@@ -460,7 +495,7 @@ export default function ProfilePage() {
                 {profileData.bio?.trim() ? (
                   <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{profileData.bio.trim()}</p>
                 ) : (
-                  <p className="text-sm text-slate-400 italic">No bio yet — click Edit Profile to add one.</p>
+                  <p className="text-sm text-slate-400 italic">{isPublicView ? 'No bio provided.' : 'No bio yet \u2014 click Edit Profile to add one.'}</p>
                 )}
               </section>
 
@@ -481,10 +516,10 @@ export default function ProfilePage() {
               </section>
 
               {/* Projects */}
-              <ProjectsSection />
+              {isPublicView ? <ProjectsSection userId={viewUserId} /> : <ProjectsSection />}
 
-              {/* Resume */}
-              {profileData.resume_filename && (
+              {/* Resume — own profile only */}
+              {!isPublicView && profileData.resume_filename && (
                 <section className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
                   <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Resume</h2>
                   <div className="flex items-center gap-4">
