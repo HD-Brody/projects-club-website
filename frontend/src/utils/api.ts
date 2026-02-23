@@ -338,6 +338,61 @@ export const profileApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Upload avatar image
+   */
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = localStorage.getItem('access_token');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile/avatar`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return {
+          error: data.error || 'Failed to upload avatar',
+          status: response.status,
+        };
+      }
+
+      return {
+        data,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+        status: 0,
+      };
+    }
+  },
+
+  /**
+   * Get avatar URL for a user (public, no auth needed)
+   */
+  getAvatarUrl: (userId: number) => {
+    return `${API_BASE_URL}/api/profile/avatar/${userId}`;
+  },
+
+  /**
+   * Delete avatar
+   */
+  deleteAvatar: async () => {
+    return apiRequest('/api/profile/avatar', {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Auth utilities

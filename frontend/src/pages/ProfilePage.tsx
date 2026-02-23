@@ -23,6 +23,10 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
   });
 
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState<number | null>(null);
+  const [hasAvatar, setHasAvatar] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -30,6 +34,7 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
   const [resumeUploading, setResumeUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const skillsList = profileData.skills
     ? profileData.skills
@@ -64,10 +69,16 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
           instagram: response.data.instagram || prev.instagram || "",
           resume_filename: response.data.resume_filename || ""
         };
-        localStorage.setItem("profile_cache", JSON.stringify(profile));
+        localStorage.setItem("profile_cache", JSON.stringify({
+          ...profile,
+          user_id: response.data.user_id,
+          has_avatar: !!response.data.has_avatar,
+        }));
         return profile;
       });
       setUserEmail(response.data.email || "");
+      setUserId(response.data.user_id || null);
+      setHasAvatar(!!response.data.has_avatar);
     }
   };
 
@@ -91,6 +102,7 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
         instagram: response.data.instagram || "",
         resume_filename: ""
       });
+      setHasAvatar(!!response.data.has_avatar);
     }
   };
 
@@ -189,6 +201,69 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
     if (file) handleResumeUpload(file);
   };
 
+  // Avatar upload handlers
+  const handleAvatarUpload = async (file: File) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      alert('Only JPEG, PNG, and WebP images are allowed');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size must be less than 2MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    const response = await profileApi.uploadAvatar(file);
+    setAvatarUploading(false);
+
+    if (response.error) {
+      alert(`Error: ${response.error}`);
+    } else {
+      setHasAvatar(true);
+      setAvatarVersion((v) => v + 1);
+      // Update cache so navbar avatar updates
+      try {
+        const cached = localStorage.getItem('profile_cache');
+        if (cached) {
+          const c = JSON.parse(cached);
+          c.has_avatar = true;
+          localStorage.setItem('profile_cache', JSON.stringify(c));
+        }
+      } catch {}
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    if (!confirm('Are you sure you want to delete your profile picture?')) return;
+
+    const response = await profileApi.deleteAvatar();
+    if (response.error) {
+      alert(`Error: ${response.error}`);
+    } else {
+      setHasAvatar(false);
+      setAvatarVersion((v) => v + 1);
+      // Update cache so navbar avatar updates
+      try {
+        const cached = localStorage.getItem('profile_cache');
+        if (cached) {
+          const c = JSON.parse(cached);
+          c.has_avatar = false;
+          localStorage.setItem('profile_cache', JSON.stringify(c));
+        }
+      } catch {}
+    }
+  };
+
+  const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleAvatarUpload(file);
+    if (e.target) e.target.value = '';
+  };
+
+  const avatarUserId = isPublicView ? viewUserId : userId;
+  const avatarUrl = hasAvatar && avatarUserId ? `${profileApi.getAvatarUrl(avatarUserId)}?v=${avatarVersion}` : null;
+
   const fetchResumeBlob = async () => {
     const token = authUtils.getToken();
     const response = await fetch(`${API_BASE_URL}/api/profile/resume`, {
@@ -252,6 +327,51 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
             </div>
 
             <form onSubmit={handleProfileSubmit}>
+              {/* Section: Profile Picture */}
+              <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 mb-4">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">Profile Picture</h3>
+                <div className="flex items-center gap-5">
+                  <div className="relative group shrink-0">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar"
+                        className="h-20 w-20 rounded-full object-cover ring-2 ring-slate-100"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-slate-900 text-white font-bold grid place-items-center text-2xl uppercase ring-2 ring-slate-100">
+                        {initials || "U"}
+                      </div>
+                    )}
+                    {avatarUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="px-4 py-2 rounded-lg ring-1 ring-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      {hasAvatar ? 'Replace Photo' : 'Upload Photo'}
+                    </button>
+                    {hasAvatar && (
+                      <button
+                        type="button"
+                        onClick={handleAvatarDelete}
+                        className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition text-sm"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                    <p className="text-xs text-slate-400">JPEG, PNG or WebP. Max 2MB.</p>
+                  </div>
+                </div>
+                <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarFileSelect} className="hidden" />
+              </div>
+
               {/* Section: Identity */}
               <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 mb-4">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">Identity</h3>
@@ -410,8 +530,45 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
             <aside className="space-y-5">
               <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
                 {/* Avatar */}
-                <div className="h-28 w-28 rounded-full bg-slate-900 text-white font-bold grid place-items-center text-3xl uppercase mx-auto ring-4 ring-slate-100">
-                  {initials || "U"}
+                <div className="relative mx-auto w-28 h-28 group">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={profileData.full_name || 'Avatar'}
+                      className="h-28 w-28 rounded-full object-cover ring-4 ring-slate-100"
+                    />
+                  ) : (
+                    <div className="h-28 w-28 rounded-full bg-slate-900 text-white font-bold grid place-items-center text-3xl uppercase ring-4 ring-slate-100">
+                      {initials || "U"}
+                    </div>
+                  )}
+                  {/* Hover overlay — own profile only */}
+                  {!isPublicView && (
+                    <>
+                      <div
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition cursor-pointer flex items-center justify-center"
+                      >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      </div>
+                      {hasAvatar && (
+                        <button
+                          type="button"
+                          onClick={handleAvatarDelete}
+                          className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center hover:bg-red-600 shadow-sm"
+                          title="Remove photo"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      )}
+                      <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarFileSelect} className="hidden" />
+                    </>
+                  )}
+                  {avatarUploading && (
+                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                      <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Name & metadata */}

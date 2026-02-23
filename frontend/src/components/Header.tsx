@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { authUtils } from "../utils/api";
+import { authUtils, API_BASE_URL } from "../utils/api";
 
 interface HeaderProps {
   onNavigate?: (route: string) => void;
@@ -21,6 +21,19 @@ function getProfileInitial(): string {
     }
   } catch {}
   return "U";
+}
+
+function getAvatarUrl(): string | null {
+  try {
+    const cached = localStorage.getItem("profile_cache");
+    if (cached) {
+      const profile = JSON.parse(cached);
+      if (profile.has_avatar && profile.user_id) {
+        return `${API_BASE_URL}/api/profile/avatar/${profile.user_id}`;
+      }
+    }
+  } catch {}
+  return null;
 }
 
 function Header({ onNavigate }: HeaderProps) {
@@ -100,12 +113,22 @@ function Header({ onNavigate }: HeaderProps) {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-600 to-indigo-600 text-white grid place-items-center text-sm font-semibold shadow-[0_6px_16px_rgba(59,130,246,0.2)] hover:ring-2 hover:ring-sky-200 hover:ring-offset-1 transition"
+                  className="h-9 w-9 rounded-full overflow-hidden grid place-items-center text-sm font-semibold hover:ring-2 hover:ring-sky-200 hover:ring-offset-1 transition"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                   title="Account"
                 >
-                  {getProfileInitial()}
+                  {getAvatarUrl() ? (
+                    <img
+                      src={getAvatarUrl()!}
+                      alt="Avatar"
+                      className="h-9 w-9 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-600 to-indigo-600 text-white grid place-items-center text-sm font-semibold shadow-[0_6px_16px_rgba(59,130,246,0.2)]">
+                      {getProfileInitial()}
+                    </span>
+                  )}
                 </button>
 
                 {menuOpen && (

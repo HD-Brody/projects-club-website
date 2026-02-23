@@ -19,6 +19,7 @@ def serialize_profile(user: User, profile: Profile):
         "discord": (profile.discord if profile else None),
         "instagram": (profile.instagram if profile else None),
         "resume_filename": (profile.resume_filename if profile else None),
+        "has_avatar": bool(profile and profile.avatar_data),
     }
 
 @profile_bp.route('/', methods=['GET'])
@@ -53,6 +54,7 @@ def get_public_profile(user_id):
         "discord": (profile.discord if profile else None),
         "instagram": (profile.instagram if profile else None),
         "has_resume": bool(profile and profile.resume_filename),
+        "has_avatar": bool(profile and profile.avatar_data),
     }), 200
 
 @profile_bp.route('/', methods=['PUT'])
@@ -185,3 +187,82 @@ def delete_resume():
     db.session.commit()
 
     return jsonify({"message": "Resume deleted successfully"}), 200
+
+
+@profile_bp.route('/avatar', methods=['POST'])
+@jwt_required()
+def upload_avatar():
+    """Upload or replace a profile picture"""
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if 'avatar' not in request.files:
+        return jsonify({"error": "No avatar file provided"}), 400
+
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    # Check file type
+    allowed_mimetypes = {'image/jpeg', 'image/png', 'image/webp'}
+    mimetype = file.content_type or ''
+    if mimetype not in allowed_mimetypes:
+        return jsonify({"error": "Only JPEG, PNG, and WebP images are allowed"}), 400
+
+    # Read file data
+    file_data = file.read()
+
+    # Check file size (max 2MB)
+    if len(file_data) > 2 * 1024 * 1024:
+        return jsonify({"error": "Image size must be less than 2MB"}), 400
+
+    profile = user.profile
+    if not profile:
+        profile = Profile(user_id=user.id)
+        db.session.add(profile)
+
+    profile.avatar_data = file_data
+    profile.avatar_mimetype = mimetype
+    db.session.commit()
+
+    return jsonify({"message": "Avatar uploaded successfully"}), 200
+
+
+@profile_bp.route('/avatar/<int:user_id>', methods=['GET'])
+def get_avatar(user_id):
+    """Get a user's avatar image (public, no auth)"""
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    if not profile or not profile.avatar_data:
+        return jsonify({"error": "No avatar"}), 404
+
+    return send_file(
+        io.BytesIO(profile.avatar_data),
+        mimetype=profile.avatar_mimetype or 'image/jpeg',
+        as_attachment=False,
+    )
+
+
+@profile_bp.route('/avatar', methods=['DELETE'])
+@jwt_required()
+def delete_avatar():
+    """Delete the user's avatar"""
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    if not profile or not profile.avatar_data:
+        return jsonify({"error": "No avatar to delete"}), 404
+
+    profile.avatar_data = None
+    profile.avatar_mimetype = None
+    db.session.commit()
+
+    return jsonify({"message": "Avatar deleted successfully"}), 200

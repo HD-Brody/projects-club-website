@@ -32,6 +32,10 @@ class Profile(db.Model):
     resume_filename = db.Column(db.String(255))  # Original filename
     resume_data = db.Column(db.LargeBinary)      # PDF binary data
 
+    # Avatar (optional)
+    avatar_data = db.Column(db.LargeBinary)       # Image binary data (JPEG/PNG)
+    avatar_mimetype = db.Column(db.String(50))     # e.g. image/jpeg, image/png
+
     # Relationship back
     user = db.relationship('User', back_populates='profile')
 
