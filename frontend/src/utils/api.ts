@@ -323,11 +323,18 @@ export const profileApi = {
   },
 
   /**
-   * Get resume download URL
+   * Get resume download URL (own profile, requires auth)
    */
   getResumeUrl: () => {
     const token = localStorage.getItem('access_token');
     return `${API_BASE_URL}/api/profile/resume?token=${token}`;
+  },
+
+  /**
+   * Get public resume download URL (any user)
+   */
+  getPublicResumeUrl: (userId: number) => {
+    return `${API_BASE_URL}/api/profile/resume/${userId}`;
   },
 
   /**

@@ -100,7 +100,7 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
         linkedin: response.data.linkedin || "",
         discord: response.data.discord || "",
         instagram: response.data.instagram || "",
-        resume_filename: ""
+        resume_filename: response.data.resume_filename || ""
       });
       setHasAvatar(!!response.data.has_avatar);
     }
@@ -265,12 +265,16 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
   const avatarUrl = hasAvatar && avatarUserId ? `${profileApi.getAvatarUrl(avatarUserId)}?v=${avatarVersion}` : null;
 
   const fetchResumeBlob = async () => {
-    const token = authUtils.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/profile/resume`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    let url: string;
+    const headers: Record<string, string> = {};
+    if (isPublicView) {
+      url = profileApi.getPublicResumeUrl(viewUserId);
+    } else {
+      url = `${API_BASE_URL}/api/profile/resume`;
+      const token = authUtils.getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, { headers });
     if (!response.ok) throw new Error('Failed to fetch resume');
     return response.blob();
   };
@@ -525,10 +529,11 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
           </div>
         ) : (
           /* ────────────────── VIEW MODE ────────────────── */
-          <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+          <div className="grid lg:grid-cols-[280px_1fr] items-start lg:items-stretch gap-8">
             {/* ── Sidebar: Identity Card ── */}
-            <aside className="space-y-5">
-              <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
+            <aside className="flex flex-col gap-5">
+              <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6 flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col justify-center">
                 {/* Avatar */}
                 <div className="relative mx-auto w-28 h-28 group">
                   {avatarUrl ? (
@@ -584,6 +589,7 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
                         : profileData.program || profileData.year}
                     </p>
                   )}
+                </div>
                 </div>
 
                 {/* Actions — own profile only */}
@@ -652,7 +658,7 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
                 {profileData.bio?.trim() ? (
                   <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{profileData.bio.trim()}</p>
                 ) : (
-                  <p className="text-sm text-slate-400 italic">{isPublicView ? 'No bio provided.' : 'No bio yet \u2014 click Edit Profile to add one.'}</p>
+                  <p className="text-sm text-slate-400 italic">{isPublicView ? 'No bio provided.' : 'No bio yet - click Edit Profile to add one.'}</p>
                 )}
               </section>
 
@@ -675,8 +681,8 @@ export default function ProfilePage({ viewUserId }: ProfilePageProps) {
               {/* Projects */}
               {isPublicView ? <ProjectsSection userId={viewUserId} /> : <ProjectsSection />}
 
-              {/* Resume — own profile only */}
-              {!isPublicView && profileData.resume_filename && (
+              {/* Resume */}
+              {profileData.resume_filename && (
                 <section className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
                   <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Resume</h2>
                   <div className="flex items-center gap-4">

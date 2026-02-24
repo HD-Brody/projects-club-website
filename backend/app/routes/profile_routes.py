@@ -54,6 +54,7 @@ def get_public_profile(user_id):
         "discord": (profile.discord if profile else None),
         "instagram": (profile.instagram if profile else None),
         "has_resume": bool(profile and profile.resume_filename),
+        "resume_filename": (profile.resume_filename if profile else None),
         "has_avatar": bool(profile and profile.avatar_data),
     }), 200
 
@@ -154,6 +155,25 @@ def download_resume():
     """Download the user's resume"""
     identity = get_jwt_identity()
     user = User.query.get(identity)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profile = user.profile
+    if not profile or not profile.resume_data:
+        return jsonify({"error": "No resume uploaded"}), 404
+
+    return send_file(
+        io.BytesIO(profile.resume_data),
+        mimetype='application/pdf',
+        as_attachment=False,
+        download_name=profile.resume_filename
+    )
+
+
+@profile_bp.route('/resume/<int:user_id>', methods=['GET'])
+def get_public_resume(user_id):
+    """Download a user's resume (public, no auth)"""
+    user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
