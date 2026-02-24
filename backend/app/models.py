@@ -8,6 +8,11 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
+    profile = db.relationship('Profile', back_populates='user', uselist=False, cascade='all, delete-orphan')
+    projects = db.relationship('Project', back_populates='owner', cascade='all, delete')
+    applications = db.relationship('Application', back_populates='applicant', cascade='all, delete')
+
 class Profile(db.Model):
     __tablename__ = 'profiles'
     id = db.Column(db.Integer, primary_key=True)
@@ -15,18 +20,75 @@ class Profile(db.Model):
     full_name = db.Column(db.String(255))
     program = db.Column(db.String(128))
     year = db.Column(db.String(16))
+    bio = db.Column(db.Text)               # new
+    skills = db.Column(db.Text)            # new, could store comma-separated list or JSON
+    
+    # Social media links (all optional)
+    linkedin = db.Column(db.String(255))
+    discord = db.Column(db.String(255))
+    instagram = db.Column(db.String(255))
+    
+    # Resume (optional)
+    resume_filename = db.Column(db.String(255))  # Original filename
+    resume_data = db.Column(db.LargeBinary)      # PDF binary data
+
+    # Avatar (optional)
+    avatar_data = db.Column(db.LargeBinary)       # Image binary data (JPEG/PNG)
+    avatar_mimetype = db.Column(db.String(50))     # e.g. image/jpeg, image/png
+
+    # Relationship back
+    user = db.relationship('User', back_populates='profile')
 
 class Project(db.Model):
     __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
+    skills = db.Column(db.Text)  # Comma-separated skills/tags for search
+    category = db.Column(db.String(64))  # Project category (e.g., Web, Mobile, AI)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    owner = db.relationship('User', back_populates='projects')
+    applications = db.relationship('Application', back_populates='project', cascade='all, delete')
 
 class Application(db.Model):
     __tablename__ = 'applications'
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     role = db.Column(db.String(64))
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    project = db.relationship('Project', back_populates='applications')
+    applicant = db.relationship('User', back_populates='applications')
+
+
+class PasswordResetToken(db.Model):
+    """Database-backed password reset tokens (replaces in-memory dict)"""
+    __tablename__ = 'password_reset_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User')
+
+
+class HTFSubmission(db.Model):
+    """Hack the Future hackathon project submissions"""
+    __tablename__ = 'htf_submissions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    project_name = db.Column(db.String(255), nullable=False)
+    youtube_url = db.Column(db.String(512), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship
+    submitter = db.relationship('User', backref='htf_submissions')

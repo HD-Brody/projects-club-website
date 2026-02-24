@@ -1,5 +1,9 @@
 Flask>=2.0
 Flask-SQLAlchemy
+SQLAlchemy
 psycopg2-binary
 Flask-JWT-Extended
 Flask-CORS
+python-dotenv
+Flask-Migrate
+Flask-Limiter
