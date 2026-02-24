@@ -50,30 +50,10 @@ export default function App() {
             <a href="#gallery" className="hover:text-slate-900">Photos</a>
             <a href="#sponsors" className="hover:text-slate-900">Sponsors</a>
             <a href="#join" className="px-3 py-1.5 rounded-full bg-slate-900 text-white hover:opacity-90">Join us</a>
-            {/* Prominent Escape Room CTA (desktop) */}
-            <a href="#/escape" aria-label="Open Escape Room registration" className="ml-3 inline-flex items-center gap-2 px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-pink-500 text-white font-semibold shadow-2xl hover:scale-105 transform transition-all animate-pulse">
-              <span className="text-lg">🧩</span>
-              <span>Register: Escape Room</span>
-            </a>
           </nav>
         </div>
       </header>
     
-    {/* Floating mobile CTA: visible on small screens only */}
-    <a href="#/escape" aria-label="Open Escape Room registration" className="fixed bottom-6 right-6 z-50 md:hidden bg-amber-500 text-white p-4 rounded-full shadow-2xl transform-gpu hover:scale-105 transition-transform animate-bounce grid place-items-center">🧩</a>
-
-      {/* Escape Room quick link (moved to top) */}
-      <section id="escape-room" className="py-10 bg-amber-50 border-b border-amber-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Escape Room — Registration</h2>
-            <p className="text-sm text-slate-600">Register your team for the Escape Room case challenge and panel talk.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="#/escape" className="px-4 py-2 rounded-xl bg-amber-500 text-black font-semibold hover:opacity-90">Open registration page</a>
-          </div>
-        </div>
-      </section>
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -164,7 +144,7 @@ export default function App() {
       <section id="gallery" className="py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold">Photos from past events</h2>
-          <p className="text-slate-600 mt-2">Tap any photo to view larger. Add more by editing the <code>GALLERY</code> array.</p>
+          <p className="text-slate-600 mt-2">Tap any photo to view larger.</p>
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {GALLERY.map((g, i) => (
               <button key={i} className="relative group focus:outline-none" onClick={() => openLightbox(i)}>
