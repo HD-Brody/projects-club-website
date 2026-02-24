@@ -137,7 +137,7 @@ export default function HomePage() {
       <section id="gallery" className="py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold">Photos from past events</h2>
-          <p className="text-slate-600 mt-2">Tap any photo to view larger. Add more by editing the <code>GALLERY</code> array.</p>
+          <p className="text-slate-600 mt-2">Tap any photo to view larger.</p>
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {GALLERY.map((g, i) => (
               <button key={i} className="relative group focus:outline-none" onClick={() => openLightbox(i)}>
