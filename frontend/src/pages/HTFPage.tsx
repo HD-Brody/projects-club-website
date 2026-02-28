@@ -6,6 +6,7 @@ import { htfApi, authUtils } from "../utils/api";
 interface HTFSubmission {
   id: number;
   project_name: string;
+  team_name: string;
   youtube_url: string;
   description: string | null;
   created_at: string;
@@ -35,11 +36,13 @@ export default function HTFPage() {
   const [submissions, setSubmissions] = useState<HTFSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState(true);
   const isAuthenticated = authUtils.isAuthenticated();
 
   // Form state
   const [showForm, setShowForm] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [teamName, setTeamName] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +60,7 @@ export default function HTFPage() {
       setError(result.error);
     } else if (result.data) {
       setSubmissions(result.data.submissions);
+      if (result.data.reveal !== undefined) setRevealed(result.data.reveal);
     }
 
     setLoading(false);
@@ -74,6 +78,7 @@ export default function HTFPage() {
 
     const result = await htfApi.createSubmission({
       project_name: projectName,
+      team_name: teamName,
       youtube_url: youtubeUrl,
       description: description || undefined,
     });
@@ -83,6 +88,7 @@ export default function HTFPage() {
     } else {
       setSubmitSuccess("Project submitted successfully!");
       setProjectName("");
+      setTeamName("");
       setYoutubeUrl("");
       setDescription("");
       fetchSubmissions();
@@ -142,6 +148,14 @@ export default function HTFPage() {
           <p className="text-sm text-slate-500 max-w-3xl">
             Check out the amazing projects built at our hackathon. Watch demo videos and get inspired by fellow club members.
           </p>
+
+          {/* Notice when submissions are hidden */}
+          {!revealed && (
+            <div className="mt-4 flex items-center gap-3 p-4 bg-white rounded-xl ring-1 ring-slate-200 text-sm text-slate-600">
+              <span className="flex-shrink-0 h-8 w-8 rounded-full bg-slate-600 text-white flex items-center justify-center text-xs font-bold">i</span>
+              <span>Submissions are hidden until after the event. Only your own project are shown below.</span>
+            </div>
+          )}
         </div>
 
         {/* Submit Button (if authenticated) */}
@@ -196,6 +210,20 @@ export default function HTFPage() {
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="e.g., AI Study Buddy"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-700 mb-1.5">
+                  Team Name *
+                </label>
+                <input
+                  type="text"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  placeholder="e.g., Team Alpha"
                   className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                   required
                 />
@@ -340,6 +368,10 @@ export default function HTFPage() {
                     <h3 className="font-semibold text-slate-900 mb-1 truncate">
                       {submission.project_name}
                     </h3>
+
+                    <p className="text-xs font-medium text-slate-500 mb-2">
+                      {submission.team_name}
+                    </p>
 
                     {submission.description && (
                       <p className="text-sm text-slate-600 mb-3 line-clamp-2">

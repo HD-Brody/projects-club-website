@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { projectApi } from '../utils/api';
 import { PROJECT_CATEGORIES } from '../constants/categories';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const SubmitProjectPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -76,40 +78,45 @@ const SubmitProjectPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => window.history.back()}
-          className="mb-6 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
-        >
-          ← Back
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
 
-        <div className="bg-white shadow-sm rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Submit a Project</h1>
-          <p className="text-gray-600 mb-6">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <a
+          href="#/projects"
+          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 mb-8 text-sm transition"
+        >
+          ← Back to Projects
+        </a>
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Submit a Project</h1>
+          <p className="text-sm text-slate-500 max-w-xl">
             Share your project and find collaborators to help bring it to life.
           </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Error Message */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-700">{error}</p>
+              <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                {error}
               </div>
             )}
 
             {/* Success Message */}
             {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-700">{success}</p>
+              <div className="p-3 bg-green-50 text-green-600 rounded-lg text-sm">
+                {success}
               </div>
             )}
 
             {/* Project Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="title" className="block text-sm text-slate-700 mb-1.5">
                 Project Title *
               </label>
               <input
@@ -119,13 +126,13 @@ const SubmitProjectPage: React.FC = () => {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="e.g., AI-Powered Study Assistant"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm text-slate-700 mb-1.5">
                 Description *
               </label>
               <textarea
@@ -135,13 +142,13 @@ const SubmitProjectPage: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Describe your project in detail. What's the goal? What problem does it solve?"
                 rows={5}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm resize-none"
               />
             </div>
 
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="category" className="block text-sm text-slate-700 mb-1.5">
                 Category *
               </label>
               <select
@@ -149,7 +156,7 @@ const SubmitProjectPage: React.FC = () => {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
               >
                 <option value="">Select a category</option>
                 {PROJECT_CATEGORIES.map((cat) => (
@@ -162,7 +169,7 @@ const SubmitProjectPage: React.FC = () => {
 
             {/* Skills */}
             <div>
-              <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="skills" className="block text-sm text-slate-700 mb-1.5">
                 Required Skills (optional)
               </label>
               <input
@@ -172,7 +179,7 @@ const SubmitProjectPage: React.FC = () => {
                 value={formData.skills}
                 onChange={handleInputChange}
                 placeholder="e.g., Python, React, Machine Learning (comma-separated)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
               />
             </div>
 
@@ -180,13 +187,15 @@ const SubmitProjectPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+              className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create Project'}
             </button>
           </form>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
