@@ -443,6 +443,7 @@ export const htfApi = {
       submissions: Array<{
         id: number;
         project_name: string;
+        team_name: string;
         youtube_url: string;
         description: string | null;
         created_at: string;
@@ -451,6 +452,7 @@ export const htfApi = {
           name: string;
         };
       }>;
+      reveal?: boolean;
     }>('/api/htf/');
   },
 
@@ -459,6 +461,7 @@ export const htfApi = {
    */
   createSubmission: async (data: {
     project_name: string;
+    team_name: string;
     youtube_url: string;
     description?: string;
   }) => {
