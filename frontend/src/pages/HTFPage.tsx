@@ -223,7 +223,7 @@ export default function HTFPage() {
                   type="text"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="e.g., Team Alpha"
+                  placeholder="e.g., Team Rocket"
                   className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm"
                   required
                 />

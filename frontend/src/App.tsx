@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import HomePage from "./pages/HomePage";
 import EscapeRoomPage from "./pages/EscapeRoomPage";
 import LoginSignupPage from "./pages/LoginSignupPage";
@@ -25,44 +26,35 @@ export default function App() {
   //   return <EscapeRoomPage />;
   // }
 
+  let page = <HomePage />;
+
   if (route === '#/login') {
-    return <LoginSignupPage />;
-  }
-
-  if (route === '#/profile') {
-    return <ProfilePage />;
-  }
-
-  if (route.startsWith('#/profile/')) {
+    page = <LoginSignupPage />;
+  } else if (route === '#/profile') {
+    page = <ProfilePage />;
+  } else if (route.startsWith('#/profile/')) {
     const userId = parseInt(route.replace('#/profile/', ''), 10);
     if (!isNaN(userId)) {
-      return <ProfilePage viewUserId={userId} />;
+      page = <ProfilePage viewUserId={userId} />;
     }
+  } else if (route.startsWith('#/reset-password')) {
+    page = <ResetPasswordPage />;
+  } else if (route === '#/projects') {
+    page = <ProjectSearchPage />;
+  } else if (route === '#/submit-project') {
+    page = <SubmitProjectPage />;
+  } else if (route === '#/applications') {
+    page = <ApplicationDashboardPage />;
+  } else if (route === '#/manage-projects') {
+    page = <ProjectOwnerPanel />;
+  } else if (route === '#/htf') {
+    page = <HTFPage />;
   }
 
-  if (route.startsWith('#/reset-password')) {
-    return <ResetPasswordPage />;
-  }
-
-  if (route === '#/projects') {
-    return <ProjectSearchPage />;
-  }
-
-  if (route === '#/submit-project') {
-    return <SubmitProjectPage />;
-  }
-
-  if (route === '#/applications') {
-    return <ApplicationDashboardPage />;
-  }
-
-  if (route === '#/manage-projects') {
-    return <ProjectOwnerPanel />;
-  }
-
-  if (route === '#/htf') {
-    return <HTFPage />;
-  }
-
-  return <HomePage />;
+  return (
+    <>
+      {page}
+      <Analytics />
+    </>
+  );
 }
