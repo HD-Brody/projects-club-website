@@ -54,6 +54,7 @@ def get_submissions():
             'project_name': sub.project_name,
             'team_name': sub.team_name,
             'youtube_url': sub.youtube_url,
+            'github_url': sub.github_url,
             'description': sub.description,
             'created_at': sub.created_at.isoformat() if sub.created_at else None,
             'submitter': {
@@ -84,6 +85,7 @@ def create_submission():
     project_name = data.get('project_name', '').strip()
     team_name = data.get('team_name', '').strip()
     youtube_url = data.get('youtube_url', '').strip()
+    github_url = data.get('github_url', '').strip()
     description = data.get('description', '').strip()
     
     # Validate required fields
@@ -98,12 +100,19 @@ def create_submission():
     if not ('youtube.com' in youtube_url or 'youtu.be' in youtube_url):
         return jsonify({"msg": "Please provide a valid YouTube URL"}), 400
     
+    # Basic GitHub URL validation
+    if not github_url:
+        return jsonify({"msg": "GitHub URL is required"}), 400
+    if 'github.com' not in github_url:
+        return jsonify({"msg": "Please provide a valid GitHub URL"}), 400
+
     # Create submission
     submission = HTFSubmission(
         user_id=user_id,
         project_name=project_name,
         team_name=team_name,
         youtube_url=youtube_url,
+        github_url=github_url,
         description=description or None
     )
     
@@ -118,6 +127,7 @@ def create_submission():
         'project_name': submission.project_name,
         'team_name': submission.team_name,
         'youtube_url': submission.youtube_url,
+        'github_url': submission.github_url,
         'description': submission.description,
         'created_at': submission.created_at.isoformat(),
         'submitter': {

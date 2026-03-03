@@ -88,6 +88,7 @@ class HTFSubmission(db.Model):
     project_name = db.Column(db.String(255), nullable=False)
     team_name = db.Column(db.String(255), nullable=False)
     youtube_url = db.Column(db.String(512), nullable=False)
+    github_url = db.Column(db.String(512), nullable=False)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

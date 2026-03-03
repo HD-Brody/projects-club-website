@@ -445,6 +445,7 @@ export const htfApi = {
         project_name: string;
         team_name: string;
         youtube_url: string;
+        github_url: string;
         description: string | null;
         created_at: string;
         submitter: {
@@ -463,6 +464,7 @@ export const htfApi = {
     project_name: string;
     team_name: string;
     youtube_url: string;
+    github_url: string;
     description?: string;
   }) => {
     return apiRequest('/api/htf/', {
